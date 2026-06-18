@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AFK ANAMBAS | Professional Academy System</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS & Plugins -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React & Dependencies (CDNJS Aman dari Blokir) -->
+    <!-- React & Dependencies (Menggunakan CDNJS yang stabil di Indonesia agar tidak blank putih) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.3/babel.min.js"></script>
@@ -45,8 +45,10 @@
     <style>
         @keyframes subtleZoom { from { transform: scale(1); } to { transform: scale(1.05); } }
         .animate-zoom { animation: subtleZoom 20s infinite alternate ease-in-out; }
+        
         @keyframes heroZoomAnim { from { transform: scale(1); } to { transform: scale(1.15); } }
         .hero-zoom { animation: heroZoomAnim 8s ease-out forwards; }
+        
         .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); }
         .dark-glass { background: rgba(5, 10, 24, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .sport-italic { font-style: italic; font-weight: 900; }
@@ -103,7 +105,6 @@
             site: {
                 heroTitle: "AFK KEPULAUAN ANAMBAS",
                 heroSubtitle: "Membangun Karakter Juara dari Beranda NKRI melalui Pembinaan Futsal Berstandar Profesional.",
-                // Diubah menjadi array untuk mendukung 3 gambar
                 heroImages: ["https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2000"], 
                 aboutHistory: "Asosiasi Futsal Kabupaten (AFK) Kepulauan Anambas didirikan sebagai pusat pengembangan atlet futsal di wilayah perbatasan Indonesia. Kami fokus pada kualitas pembinaan berstandar nasional untuk melahirkan generasi pemain yang tidak hanya unggul secara teknik, namun juga memiliki integritas dan disiplin tinggi.",
                 aboutVision: "Menjadi akademi futsal rujukan di Indonesia yang mampu melahirkan atlet elit dari wilayah perbatasan.",
@@ -129,7 +130,7 @@
             return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
         };
 
-        // Kompresi diatur maks 800px dan quality 0.4 (40%) agar ukuran Base64 sangat kecil dan tidak error di Firebase
+        // Kompresi ketat: 800px & quality 0.4 agar data array 3 gambar masuk ke limit Firestore Base64
         const compressImage = (file, maxWidth = 800, quality = 0.4) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -196,7 +197,6 @@
                 return () => window.removeEventListener('fb-ready', handleFb);
             }, []);
 
-            // Mencegah permission denied, login otomatis (anonim) jika blm ada auth
             useEffect(() => {
                 if (!fbReady) return;
                 const { auth, methods } = window.AppFB;
@@ -216,21 +216,19 @@
                 return () => unsubscribe();
             }, [fbReady]);
 
-            // Ambil data database hanya setelah dipastikan ada user login anonim
             useEffect(() => {
                 if (!fbReady || !user) return; 
-                
                 const { db, methods } = window.AppFB;
                 const appId = "afk-anambas-system";
                 const unsubscribers = [];
-                const onErr = (err) => console.warn("DB Warn:", err.message);
-                
+                const onErr = (err) => console.warn("Firebase wait:", err.message);
+
                 const siteRef = methods.doc(db, 'artifacts', appId, 'public', 'data', 'site_info', 'main');
                 unsubscribers.push(methods.onSnapshot(siteRef, (snap) => {
                     if (snap.exists()) {
                         const data = snap.data();
                         
-                        // Menyelaraskan kompatibilitas jika data lama masih 'heroImage' string bukan array
+                        // Menangani kompabilitas data lama yang mungkin masih berupa 'heroImage' string
                         let loadedHeroImages = data.site?.heroImages || [];
                         if (loadedHeroImages.length === 0 && data.site?.heroImage) {
                             loadedHeroImages = [data.site.heroImage];
@@ -380,6 +378,7 @@
 
                 return (
                     <div className="animate-fade-in">
+                        {/* 1. Hero Section */}
                         <section className="relative h-[100vh] flex items-center justify-center overflow-hidden bg-brand-navy section-curve text-center">
                             <div className="absolute inset-0 z-0 bg-brand-navy">
                                 {images.map((img, index) => (
@@ -403,6 +402,7 @@
                             </div>
                         </section>
                         
+                        {/* 2. Stats Section */}
                         <section className="py-12 -mt-10 relative z-40">
                             <div className="container mx-auto px-6">
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -422,7 +422,8 @@
                             </div>
                         </section>
 
-                        <section className="py-24 bg-white px-6">
+                        {/* 3. News & Media Section */}
+                        <section className="pt-16 pb-24 bg-white px-6">
                             <div className="container mx-auto grid lg:grid-cols-3 gap-16">
                                 <div className="lg:col-span-2 text-left">
                                     <SectionHeader title="Warta Terbaru" />
@@ -450,6 +451,32 @@
                                     </div>
                                     <button onClick={() => navigateTo('gallery')} className="mt-10 w-full py-4 bg-brand-navy text-white rounded-2xl font-black uppercase text-[9px] italic">Lihat Galeri</button>
                                 </div>
+                            </div>
+                        </section>
+
+                        {/* 4. PENAMBAHAN BARU: Mitra & Sponsor Section */}
+                        <section className="py-16 bg-white border-t border-slate-100">
+                            <div className="container mx-auto px-6 text-center">
+                                <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.4em] block mb-8">Didukung Oleh Mitra Resmi</span>
+                                <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 hover:opacity-100 grayscale hover:grayscale-0 transition-all duration-500">
+                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-shield-halved text-brand-orange" />ANAMBAS RUMAH KITA</div>
+                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-bolt text-brand-orange" /> KLINIK SPORT</div>
+                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-store text-brand-orange" /> ANAMBAS APPAREL</div>
+                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-handshake text-brand-orange" /> KONI KEPRI</div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 5. PENAMBAHAN BARU: Call To Action (Pendaftaran) Section */}
+                        <section className="relative py-24 bg-brand-orange overflow-hidden">
+                            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/carbon-fibre.png')" }}></div>
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                            <div className="container mx-auto px-6 relative z-10 text-center">
+                                <h2 className="text-4xl md:text-6xl font-black text-white uppercase italic tracking-tighter mb-6">Siap Menjadi Juara?</h2>
+                                <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto font-medium mb-10 leading-relaxed">Pendaftaran siswa baru dan seleksi atlet AFK Anambas tahun 2026 telah dibuka. Mari bergabung dan kembangkan potensimu bersama tim profesional.</p>
+                                <button onClick={() => window.open('https://wa.me/6281234567890', '_blank')} className="inline-flex items-center gap-3 bg-brand-navy text-white px-10 py-5 rounded-full font-black uppercase text-xs italic shadow-2xl hover:scale-105 transition-transform border-2 border-brand-navy hover:border-white">
+                                    <Icon name="fab fa-whatsapp text-xl text-green-400" /> Hubungi Admin Pendaftaran
+                                </button>
                             </div>
                         </section>
                     </div>
@@ -599,15 +626,15 @@
                                         <div className="grid gap-4">
                                             {cmsTab === 'site' ? (
                                                 <div className="space-y-6">
-                                                    {/* Slot 3 Gambar Hero Slideshow */}
+                                                    {/* Upload Foto Hero Slideshow (3 Slot) */}
                                                     <div className="p-6 bg-slate-50 rounded-4xl border-2 border-dashed border-slate-200">
                                                         <label className="text-[10px] font-black uppercase text-slate-400 mb-4 block italic">Gambar Background Hero (Maks 3)</label>
                                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                            {[0, 1, 2].map(idx => {
+                                                            {[0, 1, 2].map(index => {
                                                                 const heroArr = content.site.heroImages || [];
-                                                                const imgUrl = heroArr[idx];
+                                                                const imgUrl = heroArr[index];
                                                                 return (
-                                                                    <div key={idx} className="relative aspect-video rounded-2xl border-2 border-dashed flex items-center justify-center bg-white overflow-hidden group">
+                                                                    <div key={index} className="relative aspect-video rounded-2xl border-2 border-dashed flex items-center justify-center bg-white overflow-hidden group">
                                                                         {imgUrl ? (
                                                                             <Fragment>
                                                                                 <img src={imgUrl} className="w-full h-full object-cover" />
@@ -618,16 +645,16 @@
                                                                                             if(e.target.files[0]) {
                                                                                                 const c = await compressImage(e.target.files[0], 800, 0.4);
                                                                                                 let newArr = [...heroArr];
-                                                                                                newArr[idx] = c;
-                                                                                                setContent({...content, site: {...content.site, heroImages: newArr}});
+                                                                                                newArr[index] = c;
+                                                                                                setContent({...content, site: {...content.site, heroImages: newArr.filter(Boolean)}});
                                                                                             }
                                                                                         }}/>
                                                                                     </label>
                                                                                     <button onClick={(e) => {
                                                                                         e.preventDefault();
                                                                                         let newArr = [...heroArr];
-                                                                                        newArr.splice(idx, 1);
-                                                                                        setContent({...content, site: {...content.site, heroImages: newArr}});
+                                                                                        newArr.splice(index, 1);
+                                                                                        setContent({...content, site: {...content.site, heroImages: newArr.filter(Boolean)}});
                                                                                     }} className="bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
                                                                                         <Icon name="fa-trash text-xs" />
                                                                                     </button>
@@ -636,13 +663,13 @@
                                                                         ) : (
                                                                             <label className="cursor-pointer text-slate-300 hover:text-brand-orange transition-colors flex flex-col items-center gap-2">
                                                                                 <Icon name="fa-plus text-2xl" />
-                                                                                <span className="text-[8px] font-black uppercase">Isi Slot {idx + 1}</span>
+                                                                                <span className="text-[8px] font-black uppercase">Isi Slot {index + 1}</span>
                                                                                 <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                                                                     if(e.target.files[0]) {
                                                                                         const c = await compressImage(e.target.files[0], 800, 0.4);
                                                                                         let newArr = [...heroArr];
-                                                                                        newArr[idx] = c;
-                                                                                        setContent({...content, site: {...content.site, heroImages: newArr}});
+                                                                                        newArr[index] = c;
+                                                                                        setContent({...content, site: {...content.site, heroImages: newArr.filter(Boolean)}});
                                                                                     }
                                                                                 }}/>
                                                                             </label>
@@ -679,7 +706,7 @@
                                                         </div>
                                                     </div>
 
-                                                    <button onClick={()=>handleUpdateItem('site', content.site)} className="bg-brand-orange text-white px-10 py-4 rounded-xl font-black uppercase text-[10px] w-full shadow-xl">Update Pengaturan Situs</button>
+                                                    <button onClick={()=>handleUpdateItem('site', content.site)} className="bg-brand-orange text-white px-10 py-4 rounded-xl font-black uppercase text-[10px] w-full shadow-xl">Simpan Pengaturan Situs</button>
                                                 </div>
                                             ) : cmsTab === 'announcement' ? (
                                                 <div className="space-y-6">
@@ -839,6 +866,7 @@
                         <p className="text-white/20 text-[9px] uppercase tracking-[0.3em]">© 2026 AFK KEPULAUAN ANAMBAS • PROFESSIONAL ACADEMY SYSTEM</p>
                     </footer>
 
+                    {/* Modals - Announcement dengan gambar utuh tidak terpotong */}
                     {showAnnouncement && page === 'home' && (
                         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-brand-navy/95 backdrop-blur-3xl animate-fade-in" onClick={() => setShowAnnouncement(false)}>
                             <div className="relative w-full max-w-lg bg-white rounded-[3rem] overflow-hidden shadow-2xl border-t-8 border-brand-orange animate-zoom flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
