@@ -45,6 +45,8 @@
     <style>
         @keyframes subtleZoom { from { transform: scale(1); } to { transform: scale(1.05); } }
         .animate-zoom { animation: subtleZoom 20s infinite alternate ease-in-out; }
+        @keyframes heroZoomAnim { from { transform: scale(1); } to { transform: scale(1.15); } }
+        .hero-zoom { animation: heroZoomAnim 8s ease-out forwards; }
         .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); }
         .dark-glass { background: rgba(5, 10, 24, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .sport-italic { font-style: italic; font-weight: 900; }
@@ -382,7 +384,7 @@
                             <div className="absolute inset-0 z-0 bg-brand-navy">
                                 {images.map((img, index) => (
                                     <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-50 z-10' : 'opacity-0 z-0'}`}>
-                                        <img src={img} className="w-full h-full object-cover animate-zoom" />
+                                        <img src={img} className={`w-full h-full object-cover ${index === currentSlide ? 'hero-zoom' : 'scale-100'}`} />
                                     </div>
                                 ))}
                                 <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/60 to-transparent z-20"></div>
