@@ -756,12 +756,14 @@
 
                     {showAnnouncement && page === 'home' && (
                         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-brand-navy/95 backdrop-blur-3xl animate-fade-in" onClick={() => setShowAnnouncement(false)}>
-                            <div className="relative w-full max-w-lg bg-white rounded-[3rem] overflow-hidden shadow-2xl border-t-8 border-brand-orange animate-zoom" onClick={e => e.stopPropagation()}>
-                                <img src={content.announcement.img} className="w-full aspect-video object-cover" />
-                                <div className="p-10 text-left">
+                            <div className="relative w-full max-w-lg bg-white rounded-[3rem] overflow-hidden shadow-2xl border-t-8 border-brand-orange animate-zoom flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                                <div className="w-full bg-slate-100 flex justify-center items-center overflow-hidden">
+                                    <img src={content.announcement.img} className="w-full max-h-[50vh] object-contain" />
+                                </div>
+                                <div className="p-10 text-left overflow-y-auto no-scrollbar">
                                     <h2 className="text-3xl font-black uppercase italic mb-4">{content.announcement.title}</h2>
                                     <p className="text-slate-500 italic mb-8 leading-relaxed">{content.announcement.body}</p>
-                                    <button onClick={() => setShowAnnouncement(false)} className="w-full bg-brand-navy text-white py-5 rounded-2xl font-black uppercase italic shadow-xl">Lanjutkan</button>
+                                    <button onClick={() => setShowAnnouncement(false)} className="w-full bg-brand-navy text-white py-5 rounded-2xl font-black uppercase italic shadow-xl shrink-0">Lanjutkan</button>
                                 </div>
                             </div>
                         </div>
