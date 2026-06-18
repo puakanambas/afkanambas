@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFK ANAMBAS | Professional Academy System</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Dependencies (CDNJS Aman dari Blokir) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.3/babel.min.js"></script>
+    
+    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800;900&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        heading: ['Lexend', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            orange: '#FF5F00',
+                            navy: '#050A18',
+                            slate: '#1E293B',
+                            accent: '#38BDF8'
+                        }
+                    },
+                    borderRadius: {
+                        '4xl': '2.5rem',
+                        '5xl': '3.5rem',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @keyframes subtleZoom { from { transform: scale(1); } to { transform: scale(1.05); } }
+        .animate-zoom { animation: subtleZoom 20s infinite alternate ease-in-out; }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .dark-glass { background: rgba(5, 10, 24, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .sport-italic { font-style: italic; font-weight: 900; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #050A18; }
+        ::-webkit-scrollbar-thumb { background: #FF5F00; border-radius: 10px; }
+        .player-card::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60%; background: linear-gradient(to top, #050A18 0%, transparent 100%); z-index: 1; }
+        .section-curve { border-radius: 0 0 3rem 3rem; }
+        @media (min-width: 768px) { .section-curve { border-radius: 0 0 5rem 5rem; } }
+        .loading-overlay { background: rgba(5, 10, 24, 1); z-index: 9999; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .card-modern { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(0,0,0,0.05); }
+        .card-modern:hover { transform: translateY(-12px); box-shadow: 0 25px 50px -12px rgba(5, 10, 24, 0.15); }
+        .text-gradient { background: linear-gradient(to right, #FF5F00, #FFB085); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-50 text-brand-navy font-sans overflow-x-hidden">
+
+    <div id="root"></div>
+
+    <script type="module">
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDJlkB-8oiONDchamSF54z8nI1fRWtbv9I",
+            authDomain: "afk-anambas-system.firebaseapp.com",
+            projectId: "afk-anambas-system",
+            storageBucket: "afk-anambas-system.firebasestorage.app",
+            messagingSenderId: "315081890098",
+            appId: "1:315081890098:web:0d168003f549bba1559f2b"
+        };
+
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+        
+        window.AppFB = {
+            auth: getAuth(app),
+            db: getFirestore(app),
+            methods: {
+                signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously,
+                collection, doc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot
+            }
+        };
+        window.dispatchEvent(new Event('fb-ready'));
+    </script>
+
+    <script type="text/babel" data-presets="react">
+        const { useState, useEffect, Fragment, useMemo } = React;
+
+        const INITIAL_FALLBACK = {
+            site: {
+                heroTitle: "AFK KEPULAUAN ANAMBAS",
+                heroSubtitle: "Membangun Karakter Juara dari Beranda NKRI melalui Pembinaan Futsal Berstandar Profesional.",
+                // Diubah menjadi array untuk mendukung 3 gambar
+                heroImages: ["https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2000"], 
+                aboutHistory: "Asosiasi Futsal Kabupaten (AFK) Kepulauan Anambas didirikan sebagai pusat pengembangan atlet futsal di wilayah perbatasan Indonesia. Kami fokus pada kualitas pembinaan berstandar nasional untuk melahirkan generasi pemain yang tidak hanya unggul secara teknik, namun juga memiliki integritas dan disiplin tinggi.",
+                aboutVision: "Menjadi akademi futsal rujukan di Indonesia yang mampu melahirkan atlet elit dari wilayah perbatasan.",
+                aboutMission: "Menyelenggarakan pelatihan terstruktur, menjaring bibit unggul perbatasan, dan membangun ekosistem olahraga yang profesional."
+            },
+            contact: {
+                address: "GOR Tarempa, Kecamatan Siantan, Kabupaten Kepulauan Anambas, Kepri",
+                phone: "+62 812-xxxx-xxx",
+                email: "official@afkanambas.id"
+            },
+            announcement: {
+                title: "PENDAFTARAN DIBUKA!",
+                body: "Segera daftarkan diri Anda untuk menjadi bagian dari keluarga besar AFK Anambas angkatan 2026.",
+                img: "https://images.unsplash.com/photo-1517927033932-b3d18e61fb3a?q=80&w=800",
+                active: false
+            }
+        };
+
+        const formatDateIndo = (dateStr) => {
+            if (!dateStr) return '---';
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+        };
+
+        // Kompresi diatur maks 800px dan quality 0.4 (40%) agar ukuran Base64 sangat kecil dan tidak error di Firebase
+        const compressImage = (file, maxWidth = 800, quality = 0.4) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        if (w > maxWidth) { h = (maxWidth / w) * h; w = maxWidth; }
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                };
+            });
+        };
+
+        function Icon({ name, className = "" }) { return <i className={`fas ${name} ${className}`}></i>; }
+
+        function SectionHeader({ title, subtitle, light = false, center = false }) {
+            return (
+                <div className={`mb-12 md:mb-16 ${center ? 'text-center' : 'text-left'}`}>
+                    <div className={`flex items-center gap-4 mb-4 ${center ? 'justify-center' : ''}`}>
+                        <div className="h-1 w-12 bg-brand-orange"></div>
+                        <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${light ? 'text-white/60' : 'text-slate-400'}`}>Official Section</span>
+                    </div>
+                    <h2 className={`text-4xl md:text-6xl font-black uppercase tracking-tighter leading-[0.9] sport-italic ${light ? 'text-white' : 'text-brand-navy'}`}>{title}</h2>
+                    {subtitle && <p className={`mt-6 text-lg max-w-2xl font-medium ${center ? 'mx-auto' : ''} ${light ? 'text-white/50' : 'text-slate-400'}`}>{subtitle}</p>}
+                </div>
+            );
+        }
+
+        function App() {
+            const [fbReady, setFbReady] = useState(!!window.AppFB);
+            const [user, setUser] = useState(null);
+            const [isAdmin, setIsAdmin] = useState(false);
+            const [isLoading, setIsLoading] = useState(true);
+            const [isSaving, setIsSaving] = useState(false);
+            const [page, setPage] = useState('home');
+            const [scrolled, setScrolled] = useState(false);
+            const [showLogin, setShowLogin] = useState(false);
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+            const [editItem, setEditItem] = useState(null);
+            const [selectedStudent, setSelectedStudent] = useState(null);
+            const [selectedNews, setSelectedNews] = useState(null);
+            const [cmsTab, setCmsTab] = useState('site');
+            const [teamFilter, setTeamFilter] = useState('all');
+            const [searchQuery, setSearchQuery] = useState('');
+            const [showAnnouncement, setShowAnnouncement] = useState(false);
+
+            const [content, setContent] = useState({
+                site: INITIAL_FALLBACK.site,
+                management: [], coaches: [], students: [], news: [], gallery: [],
+                contact: INITIAL_FALLBACK.contact,
+                announcement: INITIAL_FALLBACK.announcement
+            });
+
+            useEffect(() => {
+                const handleFb = () => setFbReady(true);
+                window.addEventListener('fb-ready', handleFb);
+                return () => window.removeEventListener('fb-ready', handleFb);
+            }, []);
+
+            // Mencegah permission denied, login otomatis (anonim) jika blm ada auth
+            useEffect(() => {
+                if (!fbReady) return;
+                const { auth, methods } = window.AppFB;
+                
+                const initAuth = async () => {
+                    try {
+                        if (!auth.currentUser) await methods.signInAnonymously(auth);
+                    } catch (e) {}
+                };
+                initAuth();
+
+                const unsubscribe = methods.onAuthStateChanged(auth, async (firebaseUser) => {
+                    setUser(firebaseUser);
+                    setIsAdmin(!!firebaseUser && !firebaseUser.isAnonymous);
+                    setIsLoading(false);
+                });
+                return () => unsubscribe();
+            }, [fbReady]);
+
+            // Ambil data database hanya setelah dipastikan ada user login anonim
+            useEffect(() => {
+                if (!fbReady || !user) return; 
+                
+                const { db, methods } = window.AppFB;
+                const appId = "afk-anambas-system";
+                const unsubscribers = [];
+                const onErr = (err) => console.warn("DB Warn:", err.message);
+                
+                const siteRef = methods.doc(db, 'artifacts', appId, 'public', 'data', 'site_info', 'main');
+                unsubscribers.push(methods.onSnapshot(siteRef, (snap) => {
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        
+                        // Menyelaraskan kompatibilitas jika data lama masih 'heroImage' string bukan array
+                        let loadedHeroImages = data.site?.heroImages || [];
+                        if (loadedHeroImages.length === 0 && data.site?.heroImage) {
+                            loadedHeroImages = [data.site.heroImage];
+                        } else if (loadedHeroImages.length === 0) {
+                            loadedHeroImages = INITIAL_FALLBACK.site.heroImages;
+                        }
+
+                        setContent(prev => {
+                            const newContent = {
+                                ...prev,
+                                site: { ...(data.site || INITIAL_FALLBACK.site), heroImages: loadedHeroImages },
+                                contact: data.contact || INITIAL_FALLBACK.contact,
+                                announcement: data.announcement || INITIAL_FALLBACK.announcement
+                            };
+                            if (newContent.announcement.active && page === 'home') setShowAnnouncement(true);
+                            return newContent;
+                        });
+                    }
+                }, onErr));
+
+                ['management', 'coaches', 'students', 'news', 'gallery'].forEach(col => {
+                    const colRef = methods.collection(db, 'artifacts', appId, 'public', 'data', col);
+                    unsubscribers.push(methods.onSnapshot(colRef, (snap) => {
+                        const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        setContent(prev => ({ ...prev, [col]: items }));
+                    }, onErr));
+                });
+
+                return () => unsubscribers.forEach(u => u());
+            }, [fbReady, user, page]);
+
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const navigateTo = (p) => { setPage(p); setIsMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                setIsLoading(true);
+                const { auth, methods } = window.AppFB;
+                try {
+                    await methods.signInWithEmailAndPassword(auth, e.target.email.value, e.target.password.value);
+                    setShowLogin(false);
+                } catch (err) { alert("Login Gagal!"); }
+                finally { setIsLoading(false); }
+            };
+
+            const handleUpdateItem = async (type, itemData) => {
+                if (!isAdmin) return;
+                setIsSaving(true);
+                const { db, methods } = window.AppFB;
+                const appId = "afk-anambas-system";
+                try {
+                    const siteRef = methods.doc(db, 'artifacts', appId, 'public', 'data', 'site_info', 'main');
+                    if (['site', 'contact', 'announcement'].includes(type)) {
+                        await methods.setDoc(siteRef, { [type]: itemData }, { merge: true });
+                    } else {
+                        const { id, ...cleanData } = itemData;
+                        if (id) {
+                            await methods.setDoc(methods.doc(db, 'artifacts', appId, 'public', 'data', type, id), cleanData, { merge: true });
+                        } else {
+                            await methods.addDoc(methods.collection(db, 'artifacts', appId, 'public', 'data', type), cleanData);
+                        }
+                    }
+                    setEditItem(null);
+                } catch (err) { console.error(err); }
+                finally { setIsSaving(false); }
+            };
+
+            const handleDeleteItem = async (type, id) => {
+                if (!isAdmin || !confirm("Hapus permanen?")) return;
+                setIsSaving(true);
+                const { db, methods } = window.AppFB;
+                try { await methods.deleteDoc(methods.doc(db, 'artifacts', 'afk-anambas-system', 'public', 'data', type, id)); }
+                catch (err) { console.error(err); }
+                finally { setIsSaving(false); }
+            };
+
+            const filteredTeam = useMemo(() => {
+                let items = teamFilter === 'all' ? [...content.management, ...content.coaches, ...content.students] : content[teamFilter];
+                if (searchQuery) items = items.filter(i => i.name?.toLowerCase().includes(searchQuery.toLowerCase()));
+                return items;
+            }, [teamFilter, searchQuery, content]);
+
+            const handlePrintIndividual = (student) => {
+                const win = window.open('', '_blank');
+                win.document.write(`
+                    <html><head><title>Scout Report - ${student.name}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@900&family=Outfit:wght@400;800&display=swap" rel="stylesheet">
+                    <style>
+                        body{font-family:'Outfit', sans-serif;padding:60px;color:#050A18; line-height: 1.4;}
+                        .header{border-bottom:5px solid #FF5F00;padding-bottom:15px;margin-bottom:30px;display:flex;justify-content:space-between;align-items:flex-end;}
+                        .header h1{margin:0;font-family:'Lexend';text-transform:uppercase;font-style:italic;}
+                        .grid{display:grid;grid-template-columns:250px 1fr;gap:40px;}
+                        .photo{width:100%;height:320px;object-fit:cover;border:1px solid #ddd;border-radius:24px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);}
+                        .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px; margin-bottom: 20px;}
+                        .stat-box{background:#f8fafc;padding:12px 15px;border-radius:12px;border-left:4px solid #FF5F00;}
+                        .label{font-size:9px;text-transform:uppercase;color:#94a3b8;font-weight:800;margin-bottom:2px;}
+                        .val{font-size:14px;font-weight:800;text-transform:uppercase; color: #050A18;}
+                        .private-section {margin-top:30px; padding:20px; background:#f0f4f8; border-radius:15px; border-left:5px solid #050A18;}
+                        .private-title {font-size:10px; font-weight:900; color:#050A18; text-transform:uppercase; margin-bottom:10px; border-bottom:1px solid #cbd5e1; padding-bottom:5px;}
+                    </style></head>
+                    <body>
+                        <div class="header"><div><h1>AFK ANAMBAS</h1><span>Official Scout Portfolio</span></div><div><b>ID: #${student.id?.substring(0,8).toUpperCase()}</b></div></div>
+                        <div class="grid">
+                            <div><img class="photo" src="${student.img || ''}"/><div style="text-align:center;margin-top:15px;"><span style="color:#FF5F00;font-family:'Lexend';font-size:48px; font-weight:900;">#${student.jerseyNumber || '00'}</span></div></div>
+                            <div><h2>${student.name}</h2>
+                                <div class="stat-grid">
+                                    <div class="stat-box"><div class="label">Kategori</div><div class="val">${student.category}</div></div>
+                                    <div class="stat-box"><div class="label">Posisi</div><div class="val">${student.position || 'ATLET'}</div></div>
+                                    <div class="stat-box"><div class="label">Sekolah</div><div class="val">${student.school || '-'}</div></div>
+                                    <div class="stat-box"><div class="label">TTL</div><div class="val">${student.placeOfBirth}, ${formatDateIndo(student.dateOfBirth)}</div></div>
+                                </div>
+                                <div class="private-section"><div class="private-title">Arsip Manajemen</div><p>Ayah: ${student.fatherName} | Ibu: ${student.motherName}<br/>Kontak: ${student.phone}</p></div>
+                            </div>
+                        </div>
+                    </body></html>`);
+                win.document.close(); setTimeout(() => win.print(), 1000);
+            };
+
+            const handlePrintStudents = () => {
+                const win = window.open('', '_blank');
+                win.document.write(`
+                    <html><head><title>Database AFK Anambas</title>
+                    <style>@page { size: landscape; margin: 1cm; } body{font-family:sans-serif; padding:20px;} table{width:100%;border-collapse:collapse;font-size:9px;} th{background:#050A18;color:white;padding:10px;} td{border:1px solid #ddd;padding:8px;} .p{width:40px;height:50px;object-fit:cover;border-radius:4px;}</style></head>
+                    <body><h1 style="text-align:center; color:#FF5F00;">DATABASE PEMAIN AFK ANAMBAS</h1>
+                    <table><thead><tr><th>NO</th><th>FOTO</th><th>NAMA</th><th>KAT</th><th>POS</th><th>JERSEY</th><th>SEKOLAH</th></tr></thead>
+                    <tbody>${content.students.map((s,i)=>`<tr><td>${i+1}</td><td><img class="p" src="${s.img}"/></td><td><b>${s.name.toUpperCase()}</b></td><td>${s.category}</td><td>${s.position}</td><td>#${s.jerseyNumber}</td><td>${s.school}</td></tr>`).join('')}</tbody></table>
+                    </body></html>`);
+                win.document.close(); setTimeout(() => win.print(), 1000);
+            };
+
+            const HomeView = () => {
+                const [currentSlide, setCurrentSlide] = useState(0);
+                const images = content.site.heroImages && content.site.heroImages.length > 0 ? content.site.heroImages : INITIAL_FALLBACK.site.heroImages;
+
+                useEffect(() => {
+                    if (images.length <= 1) return;
+                    const interval = setInterval(() => {
+                        setCurrentSlide(prev => (prev + 1) % images.length);
+                    }, 5000);
+                    return () => clearInterval(interval);
+                }, [images.length]);
+
+                return (
+                    <div className="animate-fade-in">
+                        <section className="relative h-[100vh] flex items-center justify-center overflow-hidden bg-brand-navy section-curve text-center">
+                            <div className="absolute inset-0 z-0 bg-brand-navy">
+                                {images.map((img, index) => (
+                                    <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-50 z-10' : 'opacity-0 z-0'}`}>
+                                        <img src={img} className="w-full h-full object-cover animate-zoom" />
+                                    </div>
+                                ))}
+                                <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/60 to-transparent z-20"></div>
+                            </div>
+                            
+                            <div className="container px-6 relative z-30">
+                                <div className="inline-block px-4 py-2 bg-brand-orange/20 border border-brand-orange/30 rounded-full mb-6">
+                                    <span className="text-[10px] text-brand-orange font-black uppercase tracking-[0.4em]">Official Portal NKRI</span>
+                                </div>
+                                <h1 className="text-6xl md:text-9xl font-black text-white leading-none uppercase tracking-tighter sport-italic mb-10 italic">{content.site.heroTitle}</h1>
+                                <p className="text-lg md:text-2xl text-white/70 font-medium mb-12 max-w-2xl mx-auto leading-relaxed">{content.site.heroSubtitle}</p>
+                                <div className="flex gap-4 justify-center">
+                                    <button onClick={() => navigateTo('program')} className="bg-brand-orange text-white px-8 md:px-12 py-4 md:py-6 rounded-full font-black uppercase text-[11px] italic shadow-xl transition-all hover:scale-105">Program Akademi</button>
+                                    <button onClick={() => navigateTo('about')} className="bg-white/10 text-white border border-white/20 px-8 md:px-12 py-4 md:py-6 rounded-full font-black uppercase text-[11px] italic transition-all hover:scale-105">Profil Kami</button>
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <section className="py-12 -mt-10 relative z-40">
+                            <div className="container mx-auto px-6">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {[
+                                        {v: content.students.length, l:'Pemain Aktif', i:'fa-users'},
+                                        {v: content.coaches.length, l:'Staff Pelatih', i:'fa-whistle'},
+                                        {v: '2023', l:'Berdiri', i:'fa-calendar'},
+                                        {v: 'Anambas', l:'Otoritas', i:'fa-shield'}
+                                    ].map((s, idx) => (
+                                        <div key={idx} className="bg-white p-8 rounded-4xl shadow-xl border border-slate-100 flex flex-col items-center">
+                                            <div className="w-10 h-10 bg-brand-orange/10 text-brand-orange rounded-xl flex items-center justify-center mb-3"><Icon name={s.i} /></div>
+                                            <span className="text-3xl font-black italic sport-italic">{s.v}</span>
+                                            <span className="text-[9px] font-black uppercase text-slate-400 mt-1">{s.l}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="py-24 bg-white px-6">
+                            <div className="container mx-auto grid lg:grid-cols-3 gap-16">
+                                <div className="lg:col-span-2 text-left">
+                                    <SectionHeader title="Warta Terbaru" />
+                                    <div className="grid gap-6">
+                                        {content.news.slice(0,2).map(n => (
+                                            <div key={n.id} onClick={() => {setSelectedNews(n); setPage('news-detail')}} className="flex flex-col md:flex-row gap-8 p-6 bg-slate-50 rounded-4xl border cursor-pointer hover:border-brand-orange transition-all">
+                                                <div className="md:w-1/3 aspect-video rounded-3xl overflow-hidden"><img src={n.img} className="w-full h-full object-cover" /></div>
+                                                <div className="md:w-2/3 flex flex-col justify-center">
+                                                    <span className="text-[9px] font-black text-brand-orange uppercase mb-2 italic">{formatDateIndo(n.date)}</span>
+                                                    <h4 className="text-2xl font-black uppercase italic leading-tight mb-4">{n.title}</h4>
+                                                    <p className="text-slate-400 text-sm line-clamp-2 italic leading-relaxed">{n.body}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="bg-slate-50 p-10 rounded-[3.5rem] border shadow-inner">
+                                    <SectionHeader title="Media" />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {content.gallery.slice(0,4).map(g => (
+                                            <div key={g.id} className="aspect-square rounded-2xl overflow-hidden shadow-lg border-2 border-white hover:scale-[1.1] transition-all cursor-pointer">
+                                                <img src={g.url} className="w-full h-full object-cover" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button onClick={() => navigateTo('gallery')} className="mt-10 w-full py-4 bg-brand-navy text-white rounded-2xl font-black uppercase text-[9px] italic">Lihat Galeri</button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                );
+            };
+
+            const Navbar = () => (
+                <nav className="fixed top-0 w-full z-[100] transition-all duration-500 flex flex-col items-center py-4 px-4">
+                    <div className={`container max-w-6xl w-full flex items-center justify-between px-6 py-4 rounded-full transition-all duration-500 ${scrolled || isMobileMenuOpen ? 'glass shadow-2xl scale-95' : 'bg-transparent text-white'}`}>
+                        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigateTo('home')}>
+                            <div className="w-10 h-10 bg-brand-orange rounded-xl flex items-center justify-center text-white shadow-lg"><Icon name="fa-futbol text-xl" /></div>
+                            <span className="text-xl font-black uppercase tracking-tighter sport-italic">AFK <span className="text-brand-orange">ANAMBAS</span></span>
+                        </div>
+                        <div className="hidden lg:flex items-center gap-8 font-black uppercase text-[10px] tracking-widest italic">
+                            {['home', 'about', 'program', 'team', 'gallery', 'news'].map(p => (
+                                <button key={p} onClick={() => navigateTo(p)} className={page === p ? 'text-brand-orange' : (scrolled || page !== 'home' ? 'text-brand-navy' : 'text-white/70')}>
+                                    {p === 'news' ? 'Warta' : p === 'gallery' ? 'Galeri' : p.toUpperCase()}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {isAdmin && <button onClick={() => setPage('cms')} className="hidden sm:block bg-brand-navy text-white px-4 py-2 rounded-full text-[9px] font-black uppercase shadow-xl">Panel CMS</button>}
+                            <button onClick={() => isAdmin ? window.AppFB.methods.signOut(window.AppFB.auth) : setShowLogin(true)} className={`px-4 py-2 rounded-full text-[9px] font-black uppercase ${isAdmin ? 'bg-red-500 text-white shadow-xl' : (scrolled || page !== 'home' ? 'border border-brand-navy text-brand-navy' : 'bg-white text-brand-navy')}`}>{isAdmin ? 'Logout' : 'Admin'}</button>
+                            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center bg-white text-brand-navy shadow-lg"><Icon name={isMobileMenuOpen ? "fa-times" : "fa-bars"} /></button>
+                        </div>
+                    </div>
+                    
+                    {/* Dropdown Menu Mobile */}
+                    <div className={`lg:hidden w-full max-w-6xl transition-all duration-500 ease-in-out overflow-hidden ${isMobileMenuOpen ? 'max-h-[500px] mt-2 opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="glass rounded-4xl p-6 shadow-2xl flex flex-col gap-2">
+                            {['home', 'about', 'program', 'team', 'gallery', 'news'].map(p => (
+                                <button key={p} onClick={() => navigateTo(p)} className={`py-4 text-[12px] font-black uppercase tracking-widest italic rounded-2xl transition-all ${page === p ? 'bg-brand-orange text-white shadow-md' : 'text-brand-navy hover:bg-white/50'}`}>
+                                    {p === 'news' ? 'Warta' : p === 'gallery' ? 'Galeri' : p.toUpperCase()}
+                                </button>
+                            ))}
+                            {isAdmin && <button onClick={() => { setPage('cms'); setIsMobileMenuOpen(false); }} className="mt-2 bg-brand-navy text-white py-4 rounded-2xl text-[12px] font-black uppercase shadow-xl w-full">Panel CMS</button>}
+                        </div>
+                    </div>
+                </nav>
+            );
+
+            const renderPage = () => {
+                switch(page) {
+                    case 'home': return <HomeView />;
+                    case 'about': return (
+                        <section className="pt-40 pb-24 bg-white px-6 animate-fade-in text-left">
+                            <div className="container mx-auto max-w-6xl">
+                                <SectionHeader title="Tentang Kami" subtitle="Sejarah, filosofi, and komitmen akademi." />
+                                <div className="p-12 md:p-20 bg-slate-50 rounded-[4rem] border shadow-inner mb-12 italic text-slate-700 leading-relaxed text-2xl">
+                                    "{content.site.aboutHistory}"
+                                </div>
+                                <div className="grid md:grid-cols-2 gap-12">
+                                    <div className="p-10 bg-brand-navy rounded-[3rem] text-white shadow-2xl">
+                                        <h5 className="font-black uppercase text-brand-orange text-xs italic mb-4 tracking-widest">Visi Akademi</h5>
+                                        <p className="font-bold text-lg leading-relaxed uppercase italic opacity-80">{content.site.aboutVision}</p>
+                                    </div>
+                                    <div className="p-10 bg-slate-200 rounded-[3rem] text-brand-navy border-2 border-white shadow-sm">
+                                        <h5 className="font-black uppercase text-brand-orange text-xs italic mb-4 tracking-widest">Misi Akademi</h5>
+                                        <p className="font-bold text-lg leading-relaxed uppercase italic opacity-80">{content.site.aboutMission}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    );
+                    case 'team': return (
+                        <section className="pt-40 pb-24 bg-white px-6 animate-fade-in text-left">
+                            <div className="container mx-auto">
+                                <SectionHeader title="Database Skuad" subtitle="Arsip resmi anggota AFK Anambas." />
+                                <div className="flex flex-col lg:flex-row justify-between items-center gap-8 mb-16">
+                                    <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar w-full">
+                                        {['all', 'management', 'coaches', 'students'].map(f => (
+                                            <button key={f} onClick={() => setTeamFilter(f)} className={`px-10 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${teamFilter === f ? 'bg-brand-orange text-white shadow-xl' : 'bg-slate-100 text-slate-400'}`}>{f.toUpperCase()}</button>
+                                        ))}
+                                    </div>
+                                    <div className="relative w-full lg:w-72">
+                                        <Icon name="fa-search absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" />
+                                        <input className="w-full pl-14 pr-6 py-4 rounded-full bg-slate-50 border outline-none font-bold text-sm italic" placeholder="Cari Nama..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                                    {filteredTeam.map(item => (
+                                        <div key={item.id} onClick={() => item.jerseyNumber ? setSelectedStudent(item) : null} className="player-card relative aspect-[3/4] rounded-4xl overflow-hidden bg-brand-navy cursor-pointer shadow-2xl group transition-all hover:scale-105">
+                                            <img src={item.img || item.url || 'https://via.placeholder.com/400x500'} className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 transition-all duration-1000" />
+                                            <div className="absolute bottom-0 left-0 w-full p-8 z-10 text-left">
+                                                <span className="bg-brand-orange text-white px-4 py-1 rounded-lg text-[8px] font-black uppercase mb-3 inline-block italic tracking-widest shadow-lg">
+                                                    {item.license ? 'Pelatih' : (item.jerseyNumber ? `Pemain #${item.jerseyNumber}` : 'Manajemen')}
+                                                </span>
+                                                <h3 className="text-2xl font-black text-white uppercase italic leading-none">{item.name}</h3>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+                    );
+                    case 'news': return (
+                        <section className="pt-40 pb-24 bg-white px-6 animate-fade-in text-left">
+                            <div className="container mx-auto">
+                                <SectionHeader title="Media Warta" subtitle="Informasi terbaru." center />
+                                <div className="grid md:grid-cols-3 gap-8">
+                                    {content.news.map(n => (
+                                        <div key={n.id} onClick={() => { setSelectedNews(n); setPage('news-detail'); }} className="card-modern p-6 bg-slate-50 rounded-4xl border cursor-pointer">
+                                            <div className="aspect-video rounded-3xl overflow-hidden mb-6"><img src={n.img} className="w-full h-full object-cover" /></div>
+                                            <span className="text-[10px] font-black text-brand-orange uppercase mb-3 block italic">{formatDateIndo(n.date)}</span>
+                                            <h4 className="text-xl font-black uppercase italic leading-tight mb-4">{n.title}</h4>
+                                            <p className="text-slate-400 text-sm line-clamp-3 italic leading-relaxed">{n.body}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+                    );
+                    case 'gallery': return (
+                        <section className="pt-40 pb-24 bg-white px-6 animate-fade-in text-left">
+                            <div className="container mx-auto">
+                                <SectionHeader title="Dokumentasi Visual" subtitle="Momen akademi." />
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                    {content.gallery.map(g => (
+                                        <div key={g.id} className="aspect-square rounded-3xl overflow-hidden shadow-xl border-4 border-white hover:scale-[1.05] transition-all">
+                                            <img src={g.url} className="w-full h-full object-cover" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+                    );
+                    case 'cms': return isAdmin && (
+                        <section className="pt-40 pb-24 bg-slate-50 min-h-screen text-left">
+                            <div className="container mx-auto px-6 max-w-7xl">
+                                <div className="flex flex-col lg:flex-row gap-8">
+                                    <div className="lg:w-1/4 space-y-2">
+                                        <div className="p-8 dark-glass rounded-4xl text-white mb-6 text-center border-t-4 border-brand-orange shadow-2xl">
+                                            <h2 className="text-xl font-black uppercase italic">CMS Panel</h2>
+                                        </div>
+                                        {['site', 'contact', 'announcement', 'management', 'coaches', 'students', 'news', 'gallery'].map(t => (
+                                            <button key={t} onClick={() => setCmsTab(t)} className={`w-full flex items-center gap-4 px-8 py-4 rounded-2xl font-black text-[10px] uppercase transition-all ${cmsTab === t ? 'bg-brand-orange text-white shadow-xl' : 'bg-white text-slate-400'}`}>{t === 'announcement' ? 'PENGUMUMAN' : t.toUpperCase()}</button>
+                                        ))}
+                                    </div>
+                                    <div className="lg:w-3/4 bg-white rounded-5xl p-12 border shadow-sm">
+                                        <div className="flex justify-between items-center mb-12">
+                                            <h3 className="text-3xl font-black uppercase italic underline decoration-brand-orange decoration-8 underline-offset-8">Editor: {cmsTab.toUpperCase()}</h3>
+                                            <div className="flex gap-3">
+                                                {cmsTab === 'students' && <button onClick={handlePrintStudents} className="bg-brand-orange text-white px-6 py-2 rounded-full text-[9px] font-black uppercase shadow-lg"><Icon name="fa-print mr-2" /> Rekap Data</button>}
+                                                {!['site', 'contact', 'announcement'].includes(cmsTab) && <button onClick={() => setEditItem({ type: cmsTab, data: {} })} className="bg-brand-navy text-white px-6 py-2 rounded-full text-[9px] font-black uppercase shadow-lg">+ Tambah Baru</button>}
+                                            </div>
+                                        </div>
+                                        <div className="grid gap-4">
+                                            {cmsTab === 'site' ? (
+                                                <div className="space-y-6">
+                                                    {/* Slot 3 Gambar Hero Slideshow */}
+                                                    <div className="p-6 bg-slate-50 rounded-4xl border-2 border-dashed border-slate-200">
+                                                        <label className="text-[10px] font-black uppercase text-slate-400 mb-4 block italic">Gambar Background Hero (Maks 3)</label>
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                            {[0, 1, 2].map(idx => {
+                                                                const heroArr = content.site.heroImages || [];
+                                                                const imgUrl = heroArr[idx];
+                                                                return (
+                                                                    <div key={idx} className="relative aspect-video rounded-2xl border-2 border-dashed flex items-center justify-center bg-white overflow-hidden group">
+                                                                        {imgUrl ? (
+                                                                            <Fragment>
+                                                                                <img src={imgUrl} className="w-full h-full object-cover" />
+                                                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                                                    <label className="cursor-pointer bg-brand-orange text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
+                                                                                        <Icon name="fa-edit text-xs" />
+                                                                                        <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                                                                                            if(e.target.files[0]) {
+                                                                                                const c = await compressImage(e.target.files[0], 800, 0.4);
+                                                                                                let newArr = [...heroArr];
+                                                                                                newArr[idx] = c;
+                                                                                                setContent({...content, site: {...content.site, heroImages: newArr}});
+                                                                                            }
+                                                                                        }}/>
+                                                                                    </label>
+                                                                                    <button onClick={(e) => {
+                                                                                        e.preventDefault();
+                                                                                        let newArr = [...heroArr];
+                                                                                        newArr.splice(idx, 1);
+                                                                                        setContent({...content, site: {...content.site, heroImages: newArr}});
+                                                                                    }} className="bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
+                                                                                        <Icon name="fa-trash text-xs" />
+                                                                                    </button>
+                                                                                </div>
+                                                                            </Fragment>
+                                                                        ) : (
+                                                                            <label className="cursor-pointer text-slate-300 hover:text-brand-orange transition-colors flex flex-col items-center gap-2">
+                                                                                <Icon name="fa-plus text-2xl" />
+                                                                                <span className="text-[8px] font-black uppercase">Isi Slot {idx + 1}</span>
+                                                                                <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                                                                                    if(e.target.files[0]) {
+                                                                                        const c = await compressImage(e.target.files[0], 800, 0.4);
+                                                                                        let newArr = [...heroArr];
+                                                                                        newArr[idx] = c;
+                                                                                        setContent({...content, site: {...content.site, heroImages: newArr}});
+                                                                                    }
+                                                                                }}/>
+                                                                            </label>
+                                                                        )}
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-1">
+                                                        <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Judul Utama (Hero)</label>
+                                                        <input className="w-full p-4 bg-slate-100 rounded-xl outline-none font-black italic shadow-inner border focus:border-brand-orange" value={content.site.heroTitle} onChange={(e)=>setContent({...content, site:{...content.site, heroTitle: e.target.value}})} />
+                                                    </div>
+
+                                                    <div className="space-y-1">
+                                                        <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Sub-Judul (Hero)</label>
+                                                        <textarea className="w-full p-4 bg-slate-100 rounded-xl outline-none h-24 italic leading-relaxed shadow-inner border focus:border-brand-orange font-medium" value={content.site.heroSubtitle} onChange={(e)=>setContent({...content, site:{...content.site, heroSubtitle: e.target.value}})} />
+                                                    </div>
+
+                                                    <div className="space-y-1">
+                                                        <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Sejarah (Tentang Kami)</label>
+                                                        <textarea className="w-full p-4 bg-slate-100 rounded-xl outline-none h-32 italic leading-relaxed shadow-inner border focus:border-brand-orange font-medium" value={content.site.aboutHistory} onChange={(e)=>setContent({...content, site:{...content.site, aboutHistory: e.target.value}})} />
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        <div className="space-y-1">
+                                                            <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Visi Akademi</label>
+                                                            <textarea className="w-full p-4 bg-slate-100 rounded-xl outline-none h-32 italic leading-relaxed shadow-inner border focus:border-brand-orange font-medium" value={content.site.aboutVision} onChange={(e)=>setContent({...content, site:{...content.site, aboutVision: e.target.value}})} />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Misi Akademi</label>
+                                                            <textarea className="w-full p-4 bg-slate-100 rounded-xl outline-none h-32 italic leading-relaxed shadow-inner border focus:border-brand-orange font-medium" value={content.site.aboutMission} onChange={(e)=>setContent({...content, site:{...content.site, aboutMission: e.target.value}})} />
+                                                        </div>
+                                                    </div>
+
+                                                    <button onClick={()=>handleUpdateItem('site', content.site)} className="bg-brand-orange text-white px-10 py-4 rounded-xl font-black uppercase text-[10px] w-full shadow-xl">Update Pengaturan Situs</button>
+                                                </div>
+                                            ) : cmsTab === 'announcement' ? (
+                                                <div className="space-y-6">
+                                                    <div className="flex items-center gap-6 p-6 bg-slate-50 rounded-4xl border-2 border-dashed">
+                                                        <img src={content.announcement.img} className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg" />
+                                                        <label className="bg-brand-orange text-white px-6 py-2 rounded-xl font-black uppercase text-[10px] italic cursor-pointer">Ganti Foto<input type="file" className="hidden" accept="image/*" onChange={async (e) => { if(e.target.files[0]) { const c = await compressImage(e.target.files[0], 800, 0.4); setContent({...content, announcement: {...content.announcement, img: c}}); } }} /></label>
+                                                    </div>
+                                                    <input className="w-full p-4 bg-slate-50 rounded-xl outline-none border focus:border-brand-orange font-black italic" value={content.announcement.title} onChange={(e) => setContent({...content, announcement: {...content.announcement, title: e.target.value}})} />
+                                                    <textarea className="w-full p-4 bg-slate-50 rounded-xl outline-none border focus:border-brand-orange font-medium h-32 italic leading-relaxed" value={content.announcement.body} onChange={(e) => setContent({...content, announcement: {...content.announcement, body: e.target.value}})} />
+                                                    <div className="flex items-center gap-4 bg-slate-100 p-6 rounded-2xl font-black italic uppercase text-xs">
+                                                        <label className="relative inline-flex items-center cursor-pointer">
+                                                            <input type="checkbox" className="sr-only peer" checked={content.announcement.active} onChange={(e) => setContent({...content, announcement: {...content.announcement, active: e.target.checked}})} />
+                                                            <div className="w-14 h-7 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-brand-orange"></div>
+                                                        </label>
+                                                        Status Flash Card (Aktif/Non-Aktif)
+                                                    </div>
+                                                    <button onClick={() => handleUpdateItem('announcement', content.announcement)} className="bg-brand-orange text-white px-8 py-3 rounded-xl font-black uppercase text-[10px]">Simpan & Update Flash Card</button>
+                                                </div>
+                                            ) : (
+                                                content[cmsTab].map(item => (
+                                                    <div key={item.id} className="flex items-center gap-6 p-4 rounded-2xl bg-slate-50 border group hover:border-brand-orange">
+                                                        <img src={item.img || item.url} className="w-16 h-16 rounded-xl object-cover shadow-md" />
+                                                        <div className="flex-grow text-left">
+                                                            <h4 className="font-black text-brand-navy uppercase italic">{item.name || item.title}</h4>
+                                                            <p className="text-[9px] font-black uppercase text-brand-orange italic">{item.role || item.category || 'Konten'}</p>
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => setEditItem({ type: cmsTab, data: item })} className="w-10 h-10 bg-white border rounded-lg flex items-center justify-center hover:bg-brand-navy hover:text-white transition-all shadow-sm"><Icon name="fa-edit text-xs" /></button>
+                                                            <button onClick={() => handleDeleteItem(cmsTab, item.id)} className="w-10 h-10 bg-white border rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm"><Icon name="fa-trash-alt text-xs" /></button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    );
+                    case 'program': return (
+                        <section className="pt-40 pb-24 bg-white px-6 animate-fade-in text-left">
+                            <div className="container mx-auto max-w-6xl">
+                                <SectionHeader title="Kurikulum Juara" subtitle="Program latihan berstandar nasional." center />
+                                <div className="grid lg:grid-cols-2 gap-12">
+                                    <div className="bg-brand-navy rounded-5xl p-16 text-white shadow-2xl text-left"><h3 className="text-7xl font-black uppercase italic mb-6 sport-italic">U-12</h3><p className="text-xl opacity-70 italic mb-10 leading-relaxed">Fokus pada kegembiraan bermain dan penguasaan teknik dasar individu.</p><button onClick={() => navigateTo('team')} className="w-full bg-brand-orange text-white py-6 rounded-3xl font-black uppercase text-[11px] italic shadow-xl">Lihat Skuad U-12</button></div>
+                                    <div className="bg-white rounded-5xl p-16 text-brand-navy border-4 border-brand-navy shadow-2xl text-left"><h3 className="text-7xl font-black uppercase italic mb-6 sport-italic">U-14</h3><p className="text-xl opacity-50 italic mb-10 leading-relaxed">Pemantapan taktik tim, strategi formasi, dan penguatan fisik.</p><button onClick={() => navigateTo('team')} className="w-full bg-brand-navy text-white py-6 rounded-3xl font-black uppercase text-[11px] italic shadow-xl shadow-navy-200">Lihat Skuad U-14</button></div>
+                                </div>
+                            </div>
+                        </section>
+                    );
+                    case 'news-detail': return selectedNews && (
+                        <section className="pt-40 pb-24 bg-white animate-fade-in px-6 text-left">
+                            <div className="container mx-auto max-w-4xl">
+                                <button onClick={() => setPage('news')} className="mb-10 text-[10px] font-black uppercase text-brand-orange italic"><Icon name="fa-arrow-left mr-2" /> Kembali</button>
+                                <img src={selectedNews.img} className="w-full rounded-5xl shadow-2xl mb-12" />
+                                <h1 className="text-4xl md:text-6xl font-black uppercase italic mb-8">{selectedNews.title}</h1>
+                                <div className="prose prose-xl text-slate-600 italic whitespace-pre-line leading-relaxed border-t pt-8">{selectedNews.body}</div>
+                            </div>
+                        </section>
+                    );
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    {isLoading && <div className="fixed inset-0 flex items-center justify-center loading-overlay text-brand-orange z-[1000]"><Icon name="fa-futbol fa-spin text-6xl" /></div>}
+                    {isSaving && <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-brand-navy/80 text-white font-black italic uppercase text-xl animate-pulse">Menghubungkan Cloud...</div>}
+                    
+                    <Navbar />
+                    <main className="flex-grow">{renderPage()}</main>
+
+                    <footer className="bg-brand-navy text-white py-16 text-center border-t border-white/5 uppercase font-bold italic">
+                        <h3 className="text-2xl font-black text-brand-orange mb-4 tracking-tighter">AFK ANAMBAS</h3>
+                        <p className="text-white/20 text-[9px] uppercase tracking-[0.3em]">© 2026 AFK KEPULAUAN ANAMBAS • PROFESSIONAL ACADEMY SYSTEM</p>
+                    </footer>
+
+                    {showAnnouncement && page === 'home' && (
+                        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-brand-navy/95 backdrop-blur-3xl animate-fade-in" onClick={() => setShowAnnouncement(false)}>
+                            <div className="relative w-full max-w-lg bg-white rounded-[3rem] overflow-hidden shadow-2xl border-t-8 border-brand-orange animate-zoom" onClick={e => e.stopPropagation()}>
+                                <img src={content.announcement.img} className="w-full aspect-video object-cover" />
+                                <div className="p-10 text-left">
+                                    <h2 className="text-3xl font-black uppercase italic mb-4">{content.announcement.title}</h2>
+                                    <p className="text-slate-500 italic mb-8 leading-relaxed">{content.announcement.body}</p>
+                                    <button onClick={() => setShowAnnouncement(false)} className="w-full bg-brand-navy text-white py-5 rounded-2xl font-black uppercase italic shadow-xl">Lanjutkan</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showLogin && (
+                        <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-brand-navy/98 backdrop-blur-3xl animate-fade-in">
+                            <div className="bg-white w-full max-w-sm rounded-4xl p-12 shadow-2xl relative border-t-8 border-brand-orange" onClick={e => e.stopPropagation()}>
+                                <h3 className="text-3xl font-black text-brand-navy text-center uppercase italic mb-8">Admin Portal</h3>
+                                <form onSubmit={handleLogin} className="space-y-4 text-left">
+                                    <input className="w-full px-6 py-4 rounded-xl bg-slate-100 outline-none font-bold italic shadow-inner" name="email" placeholder="Email Admin" required defaultValue="admin@afk.id" />
+                                    <input type="password" name="password" className="w-full px-6 py-4 rounded-xl bg-slate-100 outline-none font-bold italic shadow-inner" placeholder="Password" required defaultValue="afkanambasjaya" />
+                                    <button type="submit" className="w-full bg-brand-navy text-white py-4 rounded-xl font-black uppercase italic shadow-xl mt-4">Masuk Sistem</button>
+                                    <button type="button" onClick={() => setShowLogin(false)} className="w-full text-slate-400 font-bold uppercase text-[10px] mt-4 italic text-center">Batal</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {selectedStudent && (
+                        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-brand-navy/95 backdrop-blur-xl animate-fade-in" onClick={() => setSelectedStudent(null)}>
+                            <div className="bg-white w-full max-w-5xl rounded-5xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row max-h-[95vh]" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setSelectedStudent(null)} className="absolute top-8 right-8 w-12 h-12 glass rounded-full z-20 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-all shadow-xl font-black"><Icon name="fa-times" /></button>
+                                <div className="md:w-1/3 h-[300px] md:h-auto bg-slate-200 relative shadow-inner">
+                                    <img src={selectedStudent.img} className="w-full h-full object-cover" />
+                                    <div className="absolute top-8 left-8 w-16 h-16 bg-brand-orange text-white rounded-2xl flex items-center justify-center font-black text-3xl shadow-2xl italic">#{selectedStudent.jerseyNumber || '00'}</div>
+                                </div>
+                                <div className="md:w-2/3 p-12 overflow-y-auto text-left no-scrollbar">
+                                    <span className="bg-brand-orange/10 text-brand-orange px-4 py-2 rounded-full text-[10px] font-black uppercase italic mb-6 inline-block">Athlete Profile</span>
+                                    <h3 className="text-4xl md:text-5xl font-black uppercase italic mb-10 leading-tight italic tracking-tighter">{selectedStudent.name}</h3>
+                                    <div className="grid grid-cols-2 gap-8 border-b pb-10 italic">
+                                        <div><p className="text-[8px] font-black text-slate-400 uppercase italic leading-none mb-1">Posisi</p><p className="font-bold text-lg italic uppercase">{selectedStudent.position || 'Atlet'}</p></div>
+                                        <div><p className="text-[8px] font-black text-slate-400 uppercase italic leading-none mb-1">Kategori</p><p className="font-bold text-lg italic uppercase">{selectedStudent.category}</p></div>
+                                        <div><p className="text-[8px] font-black text-slate-400 uppercase italic leading-none mb-1">Sekolah</p><p className="font-bold text-sm italic uppercase">{selectedStudent.school || '-'}</p></div>
+                                        <div><p className="text-[8px] font-black text-slate-400 uppercase italic leading-none mb-1">Status</p><p className="font-bold text-sm italic uppercase text-green-600">Terdaftar Resmi</p></div>
+                                    </div>
+                                    <div className="mt-10 p-6 bg-slate-50 rounded-4xl border border-slate-100 italic font-bold">
+                                        <div className="grid grid-cols-2 gap-4 text-sm uppercase">
+                                            <div><span className="text-[8px] text-slate-300 block mb-1 font-black">Alamat</span> {selectedStudent.address || '-'}</div>
+                                            <div><span className="text-[8px] text-slate-300 block mb-1 font-black">TTL</span> {selectedStudent.placeOfBirth}, {formatDateIndo(selectedStudent.dateOfBirth)}</div>
+                                            <div><span className="text-[8px] text-slate-300 block mb-1 font-black">Tinggi</span> {selectedStudent.height} CM</div>
+                                            <div><span className="text-[8px] text-slate-300 block mb-1 font-black">Berat</span> {selectedStudent.weight} KG</div>
+                                            <div><span className="text-[8px] text-slate-300 block mb-1 font-black">Golongan Darah</span> {selectedStudent.bloodType}</div>
+                                            <div><span className="text-[8px] text-slate-300 block mb-1 font-black">Kaki Dominan</span> {selectedStudent.foot}</div>
+                                        </div>
+                                    </div>
+                                    {isAdmin && (
+                                        <div className="mt-10 p-6 bg-brand-navy rounded-3xl text-white font-black italic uppercase">
+                                            <p className="text-[8px] text-brand-orange mb-4">Data Privat Manajemen</p>
+                                            <div className="grid grid-cols-2 gap-4 text-xs">
+                                                <div>WA: {selectedStudent.phone}</div>
+                                                <div>Ayah: {selectedStudent.fatherName}</div>
+                                                <div>Ibu: {selectedStudent.motherName}</div>
+                                                <div>Medis: {selectedStudent.medicalHistory || 'Stabil'}</div>
+                                            </div>
+                                            <button onClick={() => handlePrintIndividual(selectedStudent)} className="mt-8 w-full bg-brand-orange text-white px-8 py-3 rounded-xl text-[10px] uppercase shadow-lg italic">Cetak Scout Report</button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {editItem && (
+                        <div className="fixed inset-0 z-[600] flex items-center justify-center p-6 bg-brand-navy/98 backdrop-blur-3xl animate-fade-in text-left">
+                            <div className="bg-white w-full max-w-3xl rounded-5xl p-12 overflow-y-auto max-h-[90vh] shadow-2xl border-t-8 border-brand-orange no-scrollbar" onClick={e => e.stopPropagation()}>
+                                <div className="flex justify-between items-center mb-10">
+                                    <h3 className="text-2xl font-black uppercase italic underline decoration-brand-orange decoration-4">Editor {editItem.type.toUpperCase()}</h3>
+                                    <button onClick={() => setEditItem(null)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"><Icon name="fa-times" /></button>
+                                </div>
+                                <form onSubmit={(e) => { e.preventDefault(); handleUpdateItem(editItem.type, editItem.data); }} className="grid gap-6">
+                                    <div className="flex flex-col md:flex-row items-center gap-10 bg-slate-50 p-8 rounded-4xl border-2 border-dashed border-slate-200">
+                                        <img src={editItem.data.img || editItem.data.url || 'https://via.placeholder.com/150'} className="w-32 h-32 rounded-3xl object-cover shadow-2xl border-4 border-white" />
+                                        <label className="bg-brand-orange text-white px-10 py-3 rounded-2xl font-black uppercase text-[10px] italic cursor-pointer inline-block shadow-lg">Pilih Media<input type="file" className="hidden" accept="image/*" onChange={async (e) => { if(e.target.files[0]) { const c = await compressImage(e.target.files[0], 800, 0.4); setEditItem({...editItem, data: {...editItem.data, [editItem.type==='gallery'?'url':'img']: c}}); }}} /></label>
+                                    </div>
+                                    <div className="grid gap-4">
+                                        <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Nama / Judul Utama</label><input required className="w-full px-6 py-4 rounded-xl bg-slate-100 font-black italic shadow-inner outline-none border focus:border-brand-orange" value={editItem.data.name || editItem.data.title || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, [ (editItem.type === 'news' || editItem.type === 'gallery') ? 'title' : 'name' ]: e.target.value}})} /></div>
+                                        {editItem.type === 'students' && (
+                                            <Fragment>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Kategori</label><select className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.category || 'U-12'} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, category: e.target.value}})}><option>U-10</option><option>U-12</option><option>U-14</option><option>U-16</option></select></div>
+                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Jersey</label><input type="number" className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.jerseyNumber || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, jerseyNumber: e.target.value}})} /></div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">TB (cm)</label><input type="number" className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.height || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, height: e.target.value}})} /></div>
+                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">BB (kg)</label><input type="number" className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.weight || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, weight: e.target.value}})} /></div>
+                                                </div>
+                                                <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Posisi (ALA/PIVOT/GK/ANCHOR)</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.position || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, position: e.target.value}})} /></div>
+                                                <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Sekolah</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.school || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, school: e.target.value}})} /></div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Ayah</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.fatherName || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, fatherName: e.target.value}})} /></div>
+                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Ibu</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.motherName || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, motherName: e.target.value}})} /></div>
+                                                </div>
+                                                <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Kontak</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.phone || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, phone: e.target.value}})} /></div>
+                                                <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Alamat</label><textarea className="w-full px-6 py-4 rounded-xl bg-slate-100 font-medium italic shadow-inner border" value={editItem.data.address || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, address: e.target.value}})} /></div>
+                                            </Fragment>
+                                        )}
+                                        {editItem.type === 'news' && <textarea className="w-full px-6 py-4 rounded-xl bg-slate-100 font-medium italic shadow-inner border h-40 leading-relaxed" placeholder="Isi Warta" value={editItem.data.body || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, body: e.target.value}})} />}
+                                        {(editItem.type === 'management' || editItem.type === 'coaches') && <input className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" placeholder="Jabatan / Lisensi" value={editItem.data.role || editItem.data.license || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, [editItem.type === 'management' ? 'role' : 'license']: e.target.value}})} />}
+                                    </div>
+                                    <button type="submit" className="w-full bg-brand-navy text-white py-6 rounded-2xl font-black uppercase text-[11px] italic shadow-xl transition-all hover:bg-brand-orange mt-4 italic">Simpan Perubahan</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
