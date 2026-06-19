@@ -499,7 +499,7 @@
                         </div>
                         <div className="flex items-center gap-2">
                             {isAdmin && <button onClick={() => setPage('cms')} className="hidden sm:block bg-brand-navy text-white px-4 py-2 rounded-full text-[9px] font-black uppercase shadow-xl">Panel CMS</button>}
-                            <button onClick={() => isAdmin ? window.AppFB.methods.signOut(window.AppFB.auth) : setShowLogin(true)} className={`px-4 py-2 rounded-full text-[9px] font-black uppercase ${isAdmin ? 'bg-red-500 text-white shadow-xl' : (scrolled || page !== 'home' ? 'border border-brand-navy text-brand-navy' : 'bg-white text-brand-navy')}`}>{isAdmin ? 'Logout' : 'Admin'}</button>
+                            <button onClick={() => isAdmin ? window.AppFB.methods.signOut(window.AppFB.auth) : setShowLogin(true)} className={`px-4 py-2 rounded-full text-[9px] font-black uppercase ${isAdmin ? 'bg-red-500 text-white shadow-xl' : (scrolled || page !== 'home' ? 'border border-brand-navy text-brand-navy' : 'bg-white text-brand-navy')}`}>{isAdmin ? 'Logout' : 'Login'}</button>
                             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center bg-white text-brand-navy shadow-lg"><Icon name={isMobileMenuOpen ? "fa-times" : "fa-bars"} /></button>
                         </div>
                     </div>
