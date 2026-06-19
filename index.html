@@ -443,12 +443,15 @@
 
             const handlePrintStudents = () => {
                 const win = window.open('', '_blank');
+                // Mengurutkan pemain berdasarkan kategori sebelum dicetak (U-10, U-12, U-14, U-16)
+                const sortedStudents = [...content.students].sort((a, b) => (a.category || '').localeCompare(b.category || ''));
+                
                 win.document.write(`
                     <html><head><title>Database AFK Anambas</title>
                     <style>@page { size: landscape; margin: 1cm; } body{font-family:sans-serif; padding:20px;} table{width:100%;border-collapse:collapse;font-size:9px;} th{background:#050A18;color:white;padding:10px;} td{border:1px solid #ddd;padding:8px;} .p{width:40px;height:50px;object-fit:cover;border-radius:4px;}</style></head>
                     <body><h1 style="text-align:center; color:#FF5F00;">DATABASE PEMAIN AFK ANAMBAS</h1>
                     <table><thead><tr><th>NO</th><th>FOTO</th><th>NAMA</th><th>KAT</th><th>POS</th><th>JERSEY</th><th>SEKOLAH</th></tr></thead>
-                    <tbody>${content.students.map((s,i)=>`<tr><td>${i+1}</td><td><img class="p" src="${s.img}"/></td><td><b>${s.name.toUpperCase()}</b></td><td>${s.category}</td><td>${s.position}</td><td>#${String(s.jerseyNumber).replace(/#/g, '')}</td><td>${s.school}</td></tr>`).join('')}</tbody></table>
+                    <tbody>${sortedStudents.map((s,i)=>`<tr><td>${i+1}</td><td><img class="p" src="${s.img || ''}"/></td><td><b>${(s.name || '').toUpperCase()}</b></td><td>${s.category || '-'}</td><td>${s.position || '-'}</td><td>#${String(s.jerseyNumber || '0').replace(/#/g, '')}</td><td>${s.school || '-'}</td></tr>`).join('')}</tbody></table>
                     </body></html>`);
                 win.document.close(); setTimeout(() => win.print(), 1000);
             };
@@ -481,7 +484,7 @@
                             
                             <div className="container px-6 relative z-30">
                                 <div className="inline-block px-4 py-2 bg-brand-orange/20 border border-brand-orange/30 rounded-full mb-6 backdrop-blur-sm">
-                                    <span className="text-[10px] text-brand-orange font-black uppercase tracking-[0.4em]">Official Portal</span>
+                                    <span className="text-[10px] text-brand-orange font-black uppercase tracking-[0.4em]">Official Portal NKRI</span>
                                 </div>
                                 <h1 className="text-6xl md:text-9xl font-black text-white leading-none uppercase tracking-tighter sport-italic mb-10 italic drop-shadow-2xl">{content.site.heroTitle}</h1>
                                 <p className="text-lg md:text-2xl text-white/80 font-medium mb-12 max-w-2xl mx-auto leading-relaxed drop-shadow-md">{content.site.heroSubtitle}</p>
@@ -1292,10 +1295,16 @@
                                             </Fragment>
                                         )}
                                         {editItem.type === 'news' && (
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Isi Teks Warta / Berita</label>
-                                                <textarea className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-medium italic shadow-inner border border-slate-200 dark:border-slate-700 h-56 leading-relaxed" value={editItem.data.body || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, body: e.target.value}})} />
-                                            </div>
+                                            <Fragment>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Tanggal Warta</label>
+                                                    <input type="date" required className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.date || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, date: e.target.value}})} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Isi Teks Warta / Berita</label>
+                                                    <textarea required className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-medium italic shadow-inner border border-slate-200 dark:border-slate-700 h-56 leading-relaxed" value={editItem.data.body || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, body: e.target.value}})} />
+                                                </div>
+                                            </Fragment>
                                         )}
                                         {(editItem.type === 'management' || editItem.type === 'coaches') && (
                                             <div className="space-y-2">
