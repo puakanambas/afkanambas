@@ -1161,50 +1161,89 @@
                                                 <div className="grid grid-cols-2 gap-5">
                                                     <div className="space-y-2">
                                                         <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Kategori</label>
-                                                        <select className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700" value={editItem.data.category || 'U-12'} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, category: e.target.value}})}>
+                                                        <select className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.category || 'U-12'} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, category: e.target.value}})}>
                                                             <option>U-10</option><option>U-12</option><option>U-14</option><option>U-16</option>
                                                         </select>
                                                     </div>
                                                     <div className="space-y-2">
                                                         <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">No. Jersey</label>
-                                                        <input type="number" className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700" value={editItem.data.jerseyNumber || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, jerseyNumber: e.target.value}})} />
+                                                        <input type="number" className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.jerseyNumber || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, jerseyNumber: e.target.value}})} />
                                                     </div>
                                                 </div>
+                                                
+                                                <div className="grid grid-cols-2 gap-5">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Tempat Lahir</label>
+                                                        <input className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.placeOfBirth || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, placeOfBirth: e.target.value}})} />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Tanggal Lahir</label>
+                                                        <input type="date" className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.dateOfBirth || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, dateOfBirth: e.target.value}})} />
+                                                    </div>
+                                                </div>
+
                                                 <div className="grid grid-cols-2 gap-5">
                                                     <div className="space-y-2">
                                                         <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Tinggi (cm)</label>
-                                                        <input type="number" className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700" value={editItem.data.height || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, height: e.target.value}})} />
+                                                        <input type="number" className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.height || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, height: e.target.value}})} />
                                                     </div>
                                                     <div className="space-y-2">
                                                         <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Berat (kg)</label>
-                                                        <input type="number" className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700" value={editItem.data.weight || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, weight: e.target.value}})} />
+                                                        <input type="number" className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.weight || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, weight: e.target.value}})} />
                                                     </div>
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Posisi (ALA/PIVOT/GK/ANCHOR)</label>
-                                                    <input className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700" value={editItem.data.position || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, position: e.target.value}})} />
+                                                
+                                                <div className="grid grid-cols-2 gap-5">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Golongan Darah</label>
+                                                        <select className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.bloodType || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, bloodType: e.target.value}})}>
+                                                            <option value="">Pilih</option><option>A</option><option>B</option><option>AB</option><option>O</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Kaki Dominan</label>
+                                                        <select className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.foot || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, foot: e.target.value}})}>
+                                                            <option value="">Pilih</option><option>Kanan</option><option>Kiri</option><option>Keduanya</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Asal Sekolah</label>
-                                                    <input className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700" value={editItem.data.school || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, school: e.target.value}})} />
+
+                                                <div className="grid grid-cols-2 gap-5">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Posisi (ALA/PIVOT/GK/ANCHOR)</label>
+                                                        <input className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.position || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, position: e.target.value}})} />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Asal Sekolah</label>
+                                                        <input className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.school || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, school: e.target.value}})} />
+                                                    </div>
                                                 </div>
+                                                
                                                 <div className="grid grid-cols-2 gap-5">
                                                     <div className="space-y-2">
                                                         <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Nama Ayah</label>
-                                                        <input className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700" value={editItem.data.fatherName || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, fatherName: e.target.value}})} />
+                                                        <input className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.fatherName || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, fatherName: e.target.value}})} />
                                                     </div>
                                                     <div className="space-y-2">
                                                         <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Nama Ibu</label>
-                                                        <input className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700" value={editItem.data.motherName || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, motherName: e.target.value}})} />
+                                                        <input className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.motherName || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, motherName: e.target.value}})} />
                                                     </div>
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Kontak Darurat / WA</label>
-                                                    <input className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700" value={editItem.data.phone || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, phone: e.target.value}})} />
+                                                
+                                                <div className="grid grid-cols-2 gap-5">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Kontak Darurat / WA</label>
+                                                        <input className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.phone || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, phone: e.target.value}})} />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Riwayat Medis / Cedera</label>
+                                                        <input className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-bold italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" placeholder="Kosongkan jika stabil" value={editItem.data.medicalHistory || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, medicalHistory: e.target.value}})} />
+                                                    </div>
                                                 </div>
+                                                
                                                 <div className="space-y-2">
                                                     <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 ml-4 italic">Alamat Domisili</label>
-                                                    <textarea className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-medium italic shadow-inner border border-slate-200 dark:border-slate-700" value={editItem.data.address || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, address: e.target.value}})} />
+                                                    <textarea className="w-full px-6 py-5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-brand-navy dark:text-white font-medium italic shadow-inner border border-slate-200 dark:border-slate-700 focus:border-brand-orange outline-none transition-colors" value={editItem.data.address || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, address: e.target.value}})} />
                                                 </div>
                                             </Fragment>
                                         )}
