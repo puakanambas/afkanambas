@@ -8,7 +8,7 @@
     <!-- Tailwind CSS & Plugins -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React & Dependencies (Menggunakan CDNJS yang stabil di Indonesia agar tidak blank putih) -->
+    <!-- React & Dependencies (CDNJS Stabil) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.3/babel.min.js"></script>
@@ -19,6 +19,7 @@
 
     <script>
         tailwind.config = {
+            darkMode: 'class', // Mengaktifkan Dark Mode via Class
             theme: {
                 extend: {
                     fontFamily: {
@@ -69,9 +70,23 @@
         
         @keyframes slideDownToast { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
         .animate-toast { animation: slideDownToast 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        
+        /* Pola/Pattern Modern Sporty (Tactical Grid & Speed Lines) */
+        .bg-modern-pattern {
+            background-image: 
+                radial-gradient(rgba(5, 10, 24, 0.08) 1.5px, transparent 1.5px),
+                repeating-linear-gradient(-45deg, rgba(5, 10, 24, 0.015) 0, rgba(5, 10, 24, 0.015) 1px, transparent 1px, transparent 12px);
+            background-size: 24px 24px, 100% 100%;
+        }
+        .dark .bg-modern-pattern {
+            background-image: 
+                radial-gradient(rgba(255, 255, 255, 0.06) 1.5px, transparent 1.5px),
+                repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.01) 0, rgba(255, 255, 255, 0.01) 1px, transparent 1px, transparent 12px);
+            background-size: 24px 24px, 100% 100%;
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-brand-navy font-sans overflow-x-hidden">
+<body class="bg-slate-50 dark:bg-slate-900 text-brand-navy dark:text-slate-100 font-sans overflow-x-hidden transition-colors duration-300 bg-modern-pattern">
 
     <div id="root"></div>
 
@@ -134,7 +149,6 @@
             return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
         };
 
-        /* Kompresi gambar disesuaikan agar ukuran aman untuk Firebase (MaxWidth ditingkatkan untuk Hero) */
         const compressImage = (file, maxWidth = 1600, quality = 0.6) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -162,15 +176,25 @@
                 <div className={`mb-12 md:mb-16 ${center ? 'text-center' : 'text-left'}`}>
                     <div className={`flex items-center gap-4 mb-4 ${center ? 'justify-center' : ''}`}>
                         <div className="h-1 w-12 bg-brand-orange"></div>
-                        <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${light ? 'text-white/60' : 'text-slate-400'}`}>Official Section</span>
+                        <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${light ? 'text-white/60' : 'text-slate-400 dark:text-slate-400'}`}>Official Section</span>
                     </div>
-                    <h2 className={`text-4xl md:text-6xl font-black uppercase tracking-tighter leading-[0.9] sport-italic ${light ? 'text-white' : 'text-brand-navy'}`}>{title}</h2>
-                    {subtitle && <p className={`mt-6 text-lg max-w-2xl font-medium ${center ? 'mx-auto' : ''} ${light ? 'text-white/50' : 'text-slate-400'}`}>{subtitle}</p>}
+                    <h2 className={`text-4xl md:text-6xl font-black uppercase tracking-tighter leading-[0.9] sport-italic ${light ? 'text-white' : 'text-brand-navy dark:text-white'}`}>{title}</h2>
+                    {subtitle && <p className={`mt-6 text-lg max-w-2xl font-medium ${center ? 'mx-auto' : ''} ${light ? 'text-white/50' : 'text-slate-400 dark:text-slate-400'}`}>{subtitle}</p>}
                 </div>
             );
         }
 
         function App() {
+            // STATE Mode Gelap
+            const [isDarkMode, setIsDarkMode] = useState(() => {
+                if (typeof window !== 'undefined') {
+                    const saved = localStorage.getItem('theme');
+                    if (saved) return saved === 'dark';
+                    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+                }
+                return false;
+            });
+
             const [fbReady, setFbReady] = useState(!!window.AppFB);
             const [user, setUser] = useState(null);
             const [isAdmin, setIsAdmin] = useState(false);
@@ -185,7 +209,6 @@
             const [selectedNews, setSelectedNews] = useState(null);
             const [cmsTab, setCmsTab] = useState('site');
             
-            // State Filter & UX
             const [teamFilter, setTeamFilter] = useState('all');
             const [studentCategoryFilter, setStudentCategoryFilter] = useState('all');
             const [searchQuery, setSearchQuery] = useState('');
@@ -196,10 +219,21 @@
 
             const [content, setContent] = useState({
                 site: INITIAL_FALLBACK.site,
-                management: [], coaches: [], students: [], news: [], gallery: [],
+                management: [], coaches: [], students: [], news: [], gallery: [], sponsors: [],
                 contact: INITIAL_FALLBACK.contact,
                 announcement: INITIAL_FALLBACK.announcement
             });
+
+            // Efek untuk mengganti class Body saat Dark Mode aktif
+            useEffect(() => {
+                if (isDarkMode) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                }
+            }, [isDarkMode]);
 
             const showToast = (msg, type = 'error') => {
                 setToast({ msg, type });
@@ -242,7 +276,6 @@
                 unsubscribers.push(methods.onSnapshot(siteRef, (snap) => {
                     if (snap.exists()) {
                         const data = snap.data();
-                        
                         let loadedHeroImages = data.site?.heroImages || [];
                         if (loadedHeroImages.length === 0 && data.site?.heroImage) {
                             loadedHeroImages = [data.site.heroImage];
@@ -263,7 +296,7 @@
                     }
                 }, onErr));
 
-                ['management', 'coaches', 'students', 'news', 'gallery'].forEach(col => {
+                ['management', 'coaches', 'students', 'news', 'gallery', 'sponsors'].forEach(col => {
                     const colRef = methods.collection(db, 'artifacts', appId, 'public', 'data', col);
                     unsubscribers.push(methods.onSnapshot(colRef, (snap) => {
                         const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -424,7 +457,7 @@
                                 <p className="text-lg md:text-2xl text-white/70 font-medium mb-12 max-w-2xl mx-auto leading-relaxed">{content.site.heroSubtitle}</p>
                                 <div className="flex gap-4 justify-center">
                                 <button onClick={() => navigateTo('program')} className="bg-brand-orange text-white px-8 md:px-12 py-4 md:py-6 rounded-full font-black uppercase text-[11px] italic shadow-xl transition-all hover:scale-105">Program Akademi</button>
-                                <button onClick={() => navigateTo('about')} className="bg-white/10 text-white border border-white/20 px-8 md:px-12 py-4 md:py-6 rounded-full font-black uppercase text-[11px] italic transition-all hover:scale-105">Profil Kami</button>
+                                <button onClick={() => navigateTo('about')} className="bg-white/10 dark:bg-slate-800/50 text-white border border-white/20 px-8 md:px-12 py-4 md:py-6 rounded-full font-black uppercase text-[11px] italic transition-all hover:scale-105">Profil Kami</button>
                             </div>
                         </div>
                     </section>
@@ -439,10 +472,10 @@
                                     {v: '2023', l:'Tahun Berdiri', i:'fa-calendar-check', action: () => navigateTo('about')},
                                     {v: '4', l:'Kelas Program', i:'fa-layer-group', action: () => navigateTo('program')}
                                 ].map((s, idx) => (
-                                    <div key={idx} onClick={s.action} className="bg-white p-8 rounded-4xl shadow-xl border border-slate-100 flex flex-col items-center cursor-pointer hover:border-brand-orange hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group">
+                                    <div key={idx} onClick={s.action} className="bg-white dark:bg-slate-800 p-8 rounded-4xl shadow-xl border border-slate-100 dark:border-slate-700 flex flex-col items-center cursor-pointer hover:border-brand-orange dark:hover:border-brand-orange hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group">
                                         <div className="w-10 h-10 bg-brand-orange/10 text-brand-orange rounded-xl flex items-center justify-center mb-3 group-hover:bg-brand-orange group-hover:text-white transition-colors"><Icon name={s.i} /></div>
                                         <span className="text-3xl font-black italic sport-italic">{s.v}</span>
-                                        <span className="text-[9px] font-black uppercase text-slate-400 mt-1">{s.l}</span>
+                                        <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-400 mt-1">{s.l}</span>
                                     </div>
                                 ))}
                             </div>
@@ -450,28 +483,28 @@
                     </section>
 
                     {/* 3. News & Media Section */}
-                    <section className="pt-16 pb-24 bg-white px-6">
+                    <section className="pt-16 pb-24 px-6">
                             <div className="container mx-auto grid lg:grid-cols-3 gap-16">
                                 <div className="lg:col-span-2 text-left">
                                     <SectionHeader title="Warta Terbaru" />
                                     <div className="grid gap-6">
                                         {content.news.slice(0,2).map(n => (
-                                            <div key={n.id} onClick={() => {setSelectedNews(n); setPage('news-detail')}} className="flex flex-col md:flex-row gap-8 p-6 bg-slate-50 rounded-4xl border cursor-pointer hover:border-brand-orange transition-all group">
+                                            <div key={n.id} onClick={() => {setSelectedNews(n); setPage('news-detail')}} className="flex flex-col md:flex-row gap-8 p-6 bg-slate-50 dark:bg-slate-800/50 rounded-4xl border border-transparent dark:border-slate-700 cursor-pointer hover:border-brand-orange dark:hover:border-brand-orange transition-all group">
                                                 <div className="md:w-1/3 aspect-video rounded-3xl overflow-hidden"><img src={n.img} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /></div>
                                                 <div className="md:w-2/3 flex flex-col justify-center">
                                                     <span className="text-[9px] font-black text-brand-orange uppercase mb-2 italic">{formatDateIndo(n.date)}</span>
                                                     <h4 className="text-2xl font-black uppercase italic leading-tight mb-4">{n.title}</h4>
-                                                    <p className="text-slate-400 text-sm line-clamp-2 italic leading-relaxed">{n.body}</p>
+                                                    <p className="text-slate-400 dark:text-slate-400 text-sm line-clamp-2 italic leading-relaxed">{n.body}</p>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-                                <div className="bg-slate-50 p-10 rounded-[3.5rem] border shadow-inner">
+                                <div className="bg-slate-50 dark:bg-slate-800/50 p-10 rounded-[3.5rem] border border-transparent dark:border-slate-700 shadow-inner dark:shadow-none">
                                     <SectionHeader title="Media" />
                                     <div className="grid grid-cols-2 gap-4">
                                         {content.gallery.slice(0,4).map(g => (
-                                            <div key={g.id} onClick={() => setSelectedGalleryImg(g.url)} className="aspect-square rounded-2xl overflow-hidden shadow-lg border-2 border-white hover:scale-[1.1] transition-all cursor-pointer">
+                                            <div key={g.id} onClick={() => setSelectedGalleryImg(g.url)} className="aspect-square rounded-2xl overflow-hidden shadow-lg border-2 border-white dark:border-slate-700 hover:scale-[1.1] transition-all cursor-pointer">
                                                 <img src={g.url} loading="lazy" className="w-full h-full object-cover" />
                                             </div>
                                         ))}
@@ -482,14 +515,17 @@
                         </section>
 
                         {/* 4. Mitra & Sponsor Section */}
-                        <section className="py-16 bg-white border-t border-slate-100">
+                        <section className="py-16 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
                             <div className="container mx-auto px-6 text-center">
                                 <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.4em] block mb-8">Didukung Oleh Mitra Resmi</span>
-                                <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 hover:opacity-100 grayscale hover:grayscale-0 transition-all duration-500">
-                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-shield-halved text-brand-orange" />ANAMBAS RUMAH KITA</div>
-                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-bolt text-brand-orange" /> KLINIK SPORT</div>
-                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-store text-brand-orange" /> ANAMBAS APPAREL</div>
-                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-handshake text-brand-orange" /> KONI KEPRI</div>
+                                <div className="flex flex-wrap justify-center items-center gap-10 md:gap-20">
+                                    {content.sponsors && content.sponsors.length > 0 ? (
+                                        content.sponsors.map(sponsor => (
+                                            <img key={sponsor.id} src={sponsor.img || sponsor.url} alt={sponsor.name} title={sponsor.name} className="h-10 md:h-14 object-contain opacity-50 hover:opacity-100 grayscale hover:grayscale-0 transition-all duration-500 hover:scale-110 cursor-pointer" loading="lazy" />
+                                        ))
+                                    ) : (
+                                        <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800 dark:text-slate-400 opacity-30"><Icon name="fa-shield-halved text-brand-orange" />KOLOM SPONSOR</div>
+                                    )}
                                 </div>
                             </div>
                         </section>
@@ -501,7 +537,7 @@
                             <div className="container mx-auto px-6 relative z-10 text-center">
                                 <h2 className="text-4xl md:text-6xl font-black text-white uppercase italic tracking-tighter mb-6">Siap Menjadi Juara?</h2>
                                 <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto font-medium mb-10 leading-relaxed">Pendaftaran siswa baru dan seleksi atlet AFK Anambas tahun 2026 telah dibuka. Mari bergabung dan kembangkan potensimu bersama tim profesional.</p>
-                                <button onClick={() => window.open(`https://wa.me/${content.contact.phone.replace(/[^0-9]/g, '')}`, '_blank')} className="inline-flex items-center gap-3 bg-brand-navy text-white px-10 py-5 rounded-full font-black uppercase text-xs italic shadow-2xl hover:scale-105 transition-transform border-2 border-brand-navy hover:border-white">
+                                <button onClick={() => window.open(`https://wa.me/${content.contact.phone.replace(/[^0-9]/g, '')}`, '_blank')} className="inline-flex items-center gap-3 bg-brand-navy dark:bg-slate-900 text-white px-10 py-5 rounded-full font-black uppercase text-xs italic shadow-2xl hover:scale-105 transition-transform border-2 border-brand-navy dark:border-slate-900 hover:border-white">
                                     <Icon name="fab fa-whatsapp text-xl text-green-400" /> Hubungi Admin Pendaftaran
                                 </button>
                             </div>
@@ -512,30 +548,37 @@
 
             const Navbar = () => (
                 <nav className="fixed top-0 w-full z-[100] transition-all duration-500 flex flex-col items-center py-4 px-4">
-                    <div className={`container max-w-6xl w-full flex items-center justify-between px-6 py-4 rounded-full transition-all duration-500 ${scrolled || isMobileMenuOpen ? 'glass shadow-2xl scale-95' : 'bg-transparent text-white'}`}>
+                    <div className={`container max-w-6xl w-full flex items-center justify-between px-6 py-4 rounded-full transition-all duration-500 ${scrolled || isMobileMenuOpen ? 'glass dark:dark-glass shadow-2xl scale-95' : 'bg-transparent text-brand-navy dark:text-white'}`}>
                         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigateTo('home')}>
                             <div className="w-10 h-10 bg-brand-orange rounded-xl flex items-center justify-center text-white shadow-lg"><Icon name="fa-futbol text-xl" /></div>
-                            <span className="text-xl font-black uppercase tracking-tighter sport-italic">AFK <span className="text-brand-orange">ANAMBAS</span></span>
+                            <span className={`text-xl font-black uppercase tracking-tighter sport-italic ${!scrolled && page==='home' ? 'text-white' : ''}`}>AFK <span className="text-brand-orange">ANAMBAS</span></span>
                         </div>
                         <div className="hidden lg:flex items-center gap-8 font-black uppercase text-[10px] tracking-widest italic">
                             {['home', 'about', 'program', 'team', 'gallery', 'news'].map(p => (
-                                <button key={p} onClick={() => navigateTo(p)} className={page === p ? 'text-brand-orange' : (scrolled || page !== 'home' ? 'text-brand-navy' : 'text-white/70')}>
+                                <button key={p} onClick={() => navigateTo(p)} className={page === p ? 'text-brand-orange' : (scrolled || page !== 'home' ? 'text-brand-navy dark:text-white/70 hover:text-brand-orange' : 'text-white/70 hover:text-white')}>
                                     {p === 'news' ? 'Warta' : p === 'gallery' ? 'Galeri' : p.toUpperCase()}
                                 </button>
                             ))}
                         </div>
                         <div className="flex items-center gap-2">
-                            {isAdmin && <button onClick={() => setPage('cms')} className="hidden sm:block bg-brand-navy text-white px-4 py-2 rounded-full text-[9px] font-black uppercase shadow-xl hover:bg-brand-orange transition-colors">Panel CMS</button>}
-                            <button onClick={() => isAdmin ? window.AppFB.methods.signOut(window.AppFB.auth) : setShowLogin(true)} className={`px-4 py-2 rounded-full text-[9px] font-black uppercase hover:bg-brand-orange hover:text-white hover:border-brand-orange transition-colors ${isAdmin ? 'bg-red-500 text-white shadow-xl' : (scrolled || page !== 'home' ? 'border border-brand-navy text-brand-navy' : 'bg-white text-brand-navy')}`}>{isAdmin ? 'Logout' : 'Login'}</button>
-                            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center bg-white text-brand-navy shadow-lg"><Icon name={isMobileMenuOpen ? "fa-times" : "fa-bars"} /></button>
+                            {/* Tombol Toggle Dark Mode */}
+                            <button onClick={() => setIsDarkMode(!isDarkMode)} className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-slate-800 text-brand-navy dark:text-brand-orange shadow-lg hover:bg-brand-orange hover:text-white transition-all">
+                                <Icon name={isDarkMode ? "fa-sun" : "fa-moon"} />
+                            </button>
+
+                            {isAdmin && <button onClick={() => setPage('cms')} className="hidden sm:block bg-brand-navy dark:bg-brand-orange text-white px-4 py-2 rounded-full text-[9px] font-black uppercase shadow-xl hover:bg-brand-orange dark:hover:bg-white dark:hover:text-brand-orange transition-colors">Panel CMS</button>}
+                            
+                            <button onClick={() => isAdmin ? window.AppFB.methods.signOut(window.AppFB.auth) : setShowLogin(true)} className={`px-4 py-2 rounded-full text-[9px] font-black uppercase hover:bg-brand-orange hover:text-white hover:border-brand-orange transition-colors ${isAdmin ? 'bg-red-500 text-white shadow-xl' : (scrolled || page !== 'home' ? 'border border-brand-navy dark:border-white text-brand-navy dark:text-white' : 'bg-white text-brand-navy')}`}>{isAdmin ? 'Logout' : 'Login'}</button>
+                            
+                            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center bg-white dark:bg-slate-800 text-brand-navy dark:text-white shadow-lg"><Icon name={isMobileMenuOpen ? "fa-times" : "fa-bars"} /></button>
                         </div>
                     </div>
                     
                     {/* Dropdown Menu Mobile */}
                     <div className={`lg:hidden w-full max-w-6xl transition-all duration-500 ease-in-out overflow-hidden ${isMobileMenuOpen ? 'max-h-[500px] mt-2 opacity-100' : 'max-h-0 opacity-0'}`}>
-                        <div className="glass rounded-4xl p-6 shadow-2xl flex flex-col gap-2">
+                        <div className="glass dark:dark-glass rounded-4xl p-6 shadow-2xl flex flex-col gap-2">
                             {['home', 'about', 'program', 'team', 'gallery', 'news'].map(p => (
-                                <button key={p} onClick={() => navigateTo(p)} className={`py-4 text-[12px] font-black uppercase tracking-widest italic rounded-2xl transition-all ${page === p ? 'bg-brand-orange text-white shadow-md' : 'text-brand-navy hover:bg-white/50'}`}>
+                                <button key={p} onClick={() => navigateTo(p)} className={`py-4 text-[12px] font-black uppercase tracking-widest italic rounded-2xl transition-all ${page === p ? 'bg-brand-orange text-white shadow-md' : 'text-brand-navy dark:text-white hover:bg-white/50 dark:hover:bg-slate-800'}`}>
                                     {p === 'news' ? 'Warta' : p === 'gallery' ? 'Galeri' : p.toUpperCase()}
                                 </button>
                             ))}
@@ -549,10 +592,10 @@
                 switch(page) {
                     case 'home': return <HomeView />;
                     case 'about': return (
-                        <section className="pt-40 pb-24 bg-white px-6 animate-fade-in text-left">
+                        <section className="pt-40 pb-24 px-6 animate-fade-in text-left">
                             <div className="container mx-auto max-w-6xl">
                                 <SectionHeader title="Tentang Kami" subtitle="Sejarah, filosofi, and komitmen akademi." />
-                                <div className="p-12 md:p-20 bg-slate-50 rounded-[4rem] border shadow-inner mb-12 italic text-slate-700 leading-relaxed text-2xl">
+                                <div className="p-12 md:p-20 bg-slate-50 dark:bg-slate-800/50 rounded-[4rem] border dark:border-slate-700 shadow-inner dark:shadow-none mb-12 italic text-slate-700 dark:text-slate-300 leading-relaxed text-2xl">
                                     "{content.site.aboutHistory}"
                                 </div>
                                 <div className="grid md:grid-cols-2 gap-12">
@@ -560,7 +603,7 @@
                                         <h5 className="font-black uppercase text-brand-orange text-xs italic mb-4 tracking-widest">Visi Akademi</h5>
                                         <p className="font-bold text-lg leading-relaxed uppercase italic opacity-80">{content.site.aboutVision}</p>
                                     </div>
-                                    <div className="p-10 bg-slate-200 rounded-[3rem] text-brand-navy border-2 border-white shadow-sm">
+                                    <div className="p-10 bg-slate-200 dark:bg-slate-800 rounded-[3rem] text-brand-navy dark:text-white border-2 border-white dark:border-slate-700 shadow-sm">
                                         <h5 className="font-black uppercase text-brand-orange text-xs italic mb-4 tracking-widest">Misi Akademi</h5>
                                         <p className="font-bold text-lg leading-relaxed uppercase italic opacity-80">{content.site.aboutMission}</p>
                                     </div>
@@ -569,32 +612,31 @@
                         </section>
                     );
                     case 'team': return (
-                        <section className="pt-40 pb-24 bg-white px-6 animate-fade-in text-left">
+                        <section className="pt-40 pb-24 px-6 animate-fade-in text-left">
                             <div className="container mx-auto">
                                 <SectionHeader title="Database Skuad" subtitle="Arsip resmi anggota AFK Anambas." />
                                 
                                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 mb-10">
                                     <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar w-full">
                                         {['all', 'management', 'coaches', 'students'].map(f => (
-                                            <button key={f} onClick={() => { setTeamFilter(f); setStudentCategoryFilter('all'); }} className={`px-10 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shrink-0 ${teamFilter === f ? 'bg-brand-orange text-white shadow-xl' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>{f.toUpperCase()}</button>
+                                            <button key={f} onClick={() => { setTeamFilter(f); setStudentCategoryFilter('all'); }} className={`px-10 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shrink-0 ${teamFilter === f ? 'bg-brand-orange text-white shadow-xl' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>{f.toUpperCase()}</button>
                                         ))}
                                     </div>
                                     <div className="relative w-full lg:w-72 shrink-0">
-                                        <Icon name="fa-search absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" />
-                                        <input className="w-full pl-14 pr-6 py-4 rounded-full bg-slate-50 border outline-none font-bold text-sm italic focus:border-brand-orange transition-colors" placeholder="Cari Nama..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                                        <Icon name="fa-search absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-500" />
+                                        <input className="w-full pl-14 pr-6 py-4 rounded-full bg-slate-50 dark:bg-slate-800 border border-transparent dark:border-slate-700 outline-none font-bold text-sm italic focus:border-brand-orange dark:focus:border-brand-orange transition-colors dark:text-white dark:placeholder-slate-500" placeholder="Cari Nama..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                                     </div>
                                 </div>
 
                                 {teamFilter === 'students' && (
-                                    <div className="flex gap-2 mb-10 pb-4 overflow-x-auto no-scrollbar border-b border-slate-100">
+                                    <div className="flex gap-2 mb-10 pb-4 overflow-x-auto no-scrollbar border-b border-slate-100 dark:border-slate-800">
                                         <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest py-2 mr-4 italic">Filter Usia:</span>
                                         {['all', 'U-10', 'U-12', 'U-14', 'U-16'].map(cat => (
-                                            <button key={cat} onClick={() => setStudentCategoryFilter(cat)} className={`px-6 py-2 rounded-full text-[9px] font-black uppercase transition-all shrink-0 border ${studentCategoryFilter === cat ? 'bg-brand-navy text-white border-brand-navy' : 'bg-white text-brand-navy border-slate-200 hover:border-brand-orange'}`}>{cat === 'all' ? 'Semua Usia' : cat}</button>
+                                            <button key={cat} onClick={() => setStudentCategoryFilter(cat)} className={`px-6 py-2 rounded-full text-[9px] font-black uppercase transition-all shrink-0 border ${studentCategoryFilter === cat ? 'bg-brand-navy text-white border-brand-navy dark:bg-brand-orange dark:border-brand-orange' : 'bg-white dark:bg-slate-800 text-brand-navy dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-orange'}`}>{cat === 'all' ? 'Semua Usia' : cat}</button>
                                         ))}
                                     </div>
                                 )}
 
-                                {}
                                 {filteredTeam.length > 0 ? (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                                         {filteredTeam.map(item => (
@@ -617,10 +659,10 @@
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center py-24 text-slate-400 bg-slate-50 rounded-[4rem] border-2 border-dashed border-slate-200">
+                                    <div className="flex flex-col items-center justify-center py-24 text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/50 rounded-[4rem] border-2 border-dashed border-slate-200 dark:border-slate-700">
                                         <Icon name="fa-folder-open text-6xl mb-6 opacity-20" />
-                                        <h4 className="text-2xl font-black italic uppercase text-slate-300">Data Tidak Ditemukan</h4>
-                                        <p className="text-sm font-medium mt-2 italic text-slate-400">Tidak ada personil yang cocok dengan filter atau pencarian Anda.</p>
+                                        <h4 className="text-2xl font-black italic uppercase text-slate-300 dark:text-slate-600">Data Tidak Ditemukan</h4>
+                                        <p className="text-sm font-medium mt-2 italic text-slate-400 dark:text-slate-500">Tidak ada personil yang cocok dengan filter atau pencarian Anda.</p>
                                     </div>
                                 )}
                             </div>
@@ -628,37 +670,37 @@
                     );
                     
                     case 'cms': return isAdmin && (
-                        <section className="pt-40 pb-24 bg-slate-50 min-h-screen text-left">
+                        <section className="pt-40 pb-24 bg-slate-50 dark:bg-slate-900 min-h-screen text-left transition-colors duration-300">
                             <div className="container mx-auto px-6 max-w-7xl">
                                 <div className="flex flex-col lg:flex-row gap-8">
                                     <div className="lg:w-1/4 space-y-2">
                                         <div className="p-8 dark-glass rounded-4xl text-white mb-6 text-center border-t-4 border-brand-orange shadow-2xl">
                                             <h2 className="text-xl font-black uppercase italic">CMS Panel</h2>
                                         </div>
-                                        {['site', 'contact', 'announcement', 'management', 'coaches', 'students', 'news', 'gallery'].map(t => (
-                                            <button key={t} onClick={() => setCmsTab(t)} className={`w-full flex items-center gap-4 px-8 py-4 rounded-2xl font-black text-[10px] uppercase transition-all ${cmsTab === t ? 'bg-brand-orange text-white shadow-xl' : 'bg-white text-slate-400 hover:bg-slate-200'}`}>{t === 'announcement' ? 'PENGUMUMAN' : t.toUpperCase()}</button>
+                                        {['site', 'contact', 'announcement', 'management', 'coaches', 'students', 'news', 'gallery', 'sponsors'].map(t => (
+                                            <button key={t} onClick={() => setCmsTab(t)} className={`w-full flex items-center gap-4 px-8 py-4 rounded-2xl font-black text-[10px] uppercase transition-all ${cmsTab === t ? 'bg-brand-orange text-white shadow-xl' : 'bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>{t === 'announcement' ? 'PENGUMUMAN' : t.toUpperCase()}</button>
                                         ))}
                                     </div>
-                                    <div className="lg:w-3/4 bg-white rounded-5xl p-12 border shadow-sm">
+                                    <div className="lg:w-3/4 bg-white dark:bg-slate-800 rounded-5xl p-12 border border-transparent dark:border-slate-700 shadow-sm">
                                         <div className="flex justify-between items-center mb-12">
-                                            <h3 className="text-3xl font-black uppercase italic underline decoration-brand-orange decoration-8 underline-offset-8">Editor: {cmsTab.toUpperCase()}</h3>
+                                            <h3 className="text-3xl font-black uppercase italic underline decoration-brand-orange decoration-8 underline-offset-8 dark:text-white">Editor: {cmsTab.toUpperCase()}</h3>
                                             <div className="flex gap-3">
                                                 {cmsTab === 'students' && <button onClick={handlePrintStudents} className="bg-brand-orange text-white px-6 py-2 rounded-full text-[9px] font-black uppercase shadow-lg"><Icon name="fa-print mr-2" /> Rekap Data</button>}
-                                                {!['site', 'contact', 'announcement'].includes(cmsTab) && <button onClick={() => setEditItem({ type: cmsTab, data: {} })} className="bg-brand-navy text-white px-6 py-2 rounded-full text-[9px] font-black uppercase shadow-lg">+ Tambah Baru</button>}
+                                                {!['site', 'contact', 'announcement'].includes(cmsTab) && <button onClick={() => setEditItem({ type: cmsTab, data: {} })} className="bg-brand-navy dark:bg-slate-700 text-white px-6 py-2 rounded-full text-[9px] font-black uppercase shadow-lg">+ Tambah Baru</button>}
                                             </div>
                                         </div>
                                         <div className="grid gap-4">
                                             {cmsTab === 'site' ? (
                                                 <div className="space-y-6">
                                                     {/* Upload Foto Hero Slideshow (3 Slot) */}
-                                                    <div className="p-6 bg-slate-50 rounded-4xl border-2 border-dashed border-slate-200">
-                                                        <label className="text-[10px] font-black uppercase text-slate-400 mb-4 block italic">Gambar Background Hero (Maks 3)</label>
+                                                    <div className="p-6 bg-slate-50 dark:bg-slate-700/50 rounded-4xl border-2 border-dashed border-slate-200 dark:border-slate-600">
+                                                        <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-300 mb-4 block italic">Gambar Background Hero (Maks 3)</label>
                                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                             {[0, 1, 2].map(index => {
                                                                 const heroArr = content.site.heroImages || [];
                                                                 const imgUrl = heroArr[index];
                                                                 return (
-                                                                    <div key={index} className="relative aspect-video rounded-2xl border-2 border-dashed flex items-center justify-center bg-white overflow-hidden group">
+                                                                    <div key={index} className="relative aspect-video rounded-2xl border-2 border-dashed dark:border-slate-600 flex items-center justify-center bg-white dark:bg-slate-800 overflow-hidden group">
                                                                         {imgUrl ? (
                                                                             <Fragment>
                                                                                 <img src={imgUrl} className="w-full h-full object-cover" />
@@ -685,7 +727,7 @@
                                                                                 </div>
                                                                             </Fragment>
                                                                         ) : (
-                                                                            <label className="cursor-pointer text-slate-300 hover:text-brand-orange transition-colors flex flex-col items-center gap-2">
+                                                                            <label className="cursor-pointer text-slate-300 dark:text-slate-500 hover:text-brand-orange dark:hover:text-brand-orange transition-colors flex flex-col items-center gap-2">
                                                                                 <Icon name="fa-plus text-2xl" />
                                                                                 <span className="text-[8px] font-black uppercase">Isi Slot {index + 1}</span>
                                                                                 <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
@@ -705,28 +747,28 @@
                                                     </div>
 
                                                     <div className="space-y-1">
-                                                        <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Judul Utama (Hero)</label>
-                                                        <input className="w-full p-4 bg-slate-100 rounded-xl outline-none font-black italic shadow-inner border focus:border-brand-orange" value={content.site.heroTitle} onChange={(e)=>setContent({...content, site:{...content.site, heroTitle: e.target.value}})} />
+                                                        <label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Judul Utama (Hero)</label>
+                                                        <input className="w-full p-4 bg-slate-100 dark:bg-slate-700 rounded-xl outline-none font-black italic shadow-inner border border-transparent dark:border-slate-600 focus:border-brand-orange dark:focus:border-brand-orange dark:text-white transition-colors" value={content.site.heroTitle} onChange={(e)=>setContent({...content, site:{...content.site, heroTitle: e.target.value}})} />
                                                     </div>
 
                                                     <div className="space-y-1">
-                                                        <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Sub-Judul (Hero)</label>
-                                                        <textarea className="w-full p-4 bg-slate-100 rounded-xl outline-none h-24 italic leading-relaxed shadow-inner border focus:border-brand-orange font-medium" value={content.site.heroSubtitle} onChange={(e)=>setContent({...content, site:{...content.site, heroSubtitle: e.target.value}})} />
+                                                        <label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Sub-Judul (Hero)</label>
+                                                        <textarea className="w-full p-4 bg-slate-100 dark:bg-slate-700 rounded-xl outline-none h-24 italic leading-relaxed shadow-inner border border-transparent dark:border-slate-600 focus:border-brand-orange font-medium dark:text-white transition-colors" value={content.site.heroSubtitle} onChange={(e)=>setContent({...content, site:{...content.site, heroSubtitle: e.target.value}})} />
                                                     </div>
 
                                                     <div className="space-y-1">
-                                                        <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Sejarah (Tentang Kami)</label>
-                                                        <textarea className="w-full p-4 bg-slate-100 rounded-xl outline-none h-32 italic leading-relaxed shadow-inner border focus:border-brand-orange font-medium" value={content.site.aboutHistory} onChange={(e)=>setContent({...content, site:{...content.site, aboutHistory: e.target.value}})} />
+                                                        <label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Sejarah (Tentang Kami)</label>
+                                                        <textarea className="w-full p-4 bg-slate-100 dark:bg-slate-700 rounded-xl outline-none h-32 italic leading-relaxed shadow-inner border border-transparent dark:border-slate-600 focus:border-brand-orange font-medium dark:text-white transition-colors" value={content.site.aboutHistory} onChange={(e)=>setContent({...content, site:{...content.site, aboutHistory: e.target.value}})} />
                                                     </div>
 
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                         <div className="space-y-1">
-                                                            <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Visi Akademi</label>
-                                                            <textarea className="w-full p-4 bg-slate-100 rounded-xl outline-none h-32 italic leading-relaxed shadow-inner border focus:border-brand-orange font-medium" value={content.site.aboutVision} onChange={(e)=>setContent({...content, site:{...content.site, aboutVision: e.target.value}})} />
+                                                            <label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Visi Akademi</label>
+                                                            <textarea className="w-full p-4 bg-slate-100 dark:bg-slate-700 rounded-xl outline-none h-32 italic leading-relaxed shadow-inner border border-transparent dark:border-slate-600 focus:border-brand-orange font-medium dark:text-white transition-colors" value={content.site.aboutVision} onChange={(e)=>setContent({...content, site:{...content.site, aboutVision: e.target.value}})} />
                                                         </div>
                                                         <div className="space-y-1">
-                                                            <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Misi Akademi</label>
-                                                            <textarea className="w-full p-4 bg-slate-100 rounded-xl outline-none h-32 italic leading-relaxed shadow-inner border focus:border-brand-orange font-medium" value={content.site.aboutMission} onChange={(e)=>setContent({...content, site:{...content.site, aboutMission: e.target.value}})} />
+                                                            <label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Misi Akademi</label>
+                                                            <textarea className="w-full p-4 bg-slate-100 dark:bg-slate-700 rounded-xl outline-none h-32 italic leading-relaxed shadow-inner border border-transparent dark:border-slate-600 focus:border-brand-orange font-medium dark:text-white transition-colors" value={content.site.aboutMission} onChange={(e)=>setContent({...content, site:{...content.site, aboutMission: e.target.value}})} />
                                                         </div>
                                                     </div>
 
@@ -734,16 +776,16 @@
                                                 </div>
                                             ) : cmsTab === 'announcement' ? (
                                                 <div className="space-y-6">
-                                                    <div className="flex items-center gap-6 p-6 bg-slate-50 rounded-4xl border-2 border-dashed">
-                                                        <img src={content.announcement.img} className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg" />
+                                                    <div className="flex items-center gap-6 p-6 bg-slate-50 dark:bg-slate-700/50 rounded-4xl border-2 border-dashed dark:border-slate-600">
+                                                        <img src={content.announcement.img} className="w-24 h-24 rounded-2xl object-cover border-4 border-white dark:border-slate-600 shadow-lg" />
                                                         <label className="bg-brand-orange text-white px-6 py-2 rounded-xl font-black uppercase text-[10px] italic cursor-pointer hover:bg-brand-navy transition-colors">Ganti Foto<input type="file" className="hidden" accept="image/*" onChange={async (e) => { if(e.target.files[0]) { const c = await compressImage(e.target.files[0], 1024, 0.6); setContent({...content, announcement: {...content.announcement, img: c}}); } }} /></label>
                                                     </div>
-                                                    <input className="w-full p-4 bg-slate-50 rounded-xl outline-none border focus:border-brand-orange font-black italic" value={content.announcement.title} onChange={(e) => setContent({...content, announcement: {...content.announcement, title: e.target.value}})} />
-                                                    <textarea className="w-full p-4 bg-slate-50 rounded-xl outline-none border focus:border-brand-orange font-medium h-32 italic leading-relaxed" value={content.announcement.body} onChange={(e) => setContent({...content, announcement: {...content.announcement, body: e.target.value}})} />
-                                                    <div className="flex items-center gap-4 bg-slate-100 p-6 rounded-2xl font-black italic uppercase text-xs">
+                                                    <input className="w-full p-4 bg-slate-50 dark:bg-slate-700 rounded-xl outline-none border border-transparent dark:border-slate-600 focus:border-brand-orange font-black italic dark:text-white" value={content.announcement.title} onChange={(e) => setContent({...content, announcement: {...content.announcement, title: e.target.value}})} />
+                                                    <textarea className="w-full p-4 bg-slate-50 dark:bg-slate-700 rounded-xl outline-none border border-transparent dark:border-slate-600 focus:border-brand-orange font-medium h-32 italic leading-relaxed dark:text-white" value={content.announcement.body} onChange={(e) => setContent({...content, announcement: {...content.announcement, body: e.target.value}})} />
+                                                    <div className="flex items-center gap-4 bg-slate-100 dark:bg-slate-700/50 p-6 rounded-2xl font-black italic uppercase text-xs dark:text-slate-300">
                                                         <label className="relative inline-flex items-center cursor-pointer">
                                                             <input type="checkbox" className="sr-only peer" checked={content.announcement.active} onChange={(e) => setContent({...content, announcement: {...content.announcement, active: e.target.checked}})} />
-                                                            <div className="w-14 h-7 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-brand-orange"></div>
+                                                            <div className="w-14 h-7 bg-gray-200 dark:bg-slate-600 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-brand-orange"></div>
                                                         </label>
                                                         Status Flash Card (Aktif/Non-Aktif)
                                                     </div>
@@ -751,36 +793,36 @@
                                                 </div>
                                             ) : cmsTab === 'contact' ? (
                                                 <div className="space-y-6">
-                                                    <div className="p-8 dark-glass rounded-4xl bg-brand-navy text-white mb-6 text-center shadow-xl">
+                                                    <div className="p-8 dark-glass rounded-4xl bg-brand-navy dark:bg-slate-800 text-white mb-6 text-center shadow-xl">
                                                         <h2 className="text-xl font-black uppercase italic">PENGATURAN KONTAK FOOTER</h2>
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Alamat Markas / GOR</label>
-                                                        <textarea className="w-full p-4 bg-slate-100 rounded-xl outline-none font-medium italic shadow-inner border focus:border-brand-orange h-24 leading-relaxed" value={content.contact.address} onChange={(e)=>setContent({...content, contact:{...content.contact, address: e.target.value}})} />
+                                                        <label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Alamat Markas / GOR</label>
+                                                        <textarea className="w-full p-4 bg-slate-100 dark:bg-slate-700 rounded-xl outline-none font-medium italic shadow-inner border border-transparent dark:border-slate-600 focus:border-brand-orange h-24 leading-relaxed dark:text-white" value={content.contact.address} onChange={(e)=>setContent({...content, contact:{...content.contact, address: e.target.value}})} />
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                         <div className="space-y-1">
-                                                            <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Nomor HP / WhatsApp</label>
-                                                            <input className="w-full p-4 bg-slate-100 rounded-xl outline-none font-bold italic shadow-inner border focus:border-brand-orange" value={content.contact.phone} onChange={(e)=>setContent({...content, contact:{...content.contact, phone: e.target.value}})} />
+                                                            <label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Nomor HP / WhatsApp</label>
+                                                            <input className="w-full p-4 bg-slate-100 dark:bg-slate-700 rounded-xl outline-none font-bold italic shadow-inner border border-transparent dark:border-slate-600 focus:border-brand-orange dark:text-white" value={content.contact.phone} onChange={(e)=>setContent({...content, contact:{...content.contact, phone: e.target.value}})} />
                                                         </div>
                                                         <div className="space-y-1">
-                                                            <label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Email Resmi</label>
-                                                            <input type="email" className="w-full p-4 bg-slate-100 rounded-xl outline-none font-bold italic shadow-inner border focus:border-brand-orange" value={content.contact.email} onChange={(e)=>setContent({...content, contact:{...content.contact, email: e.target.value}})} />
+                                                            <label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Email Resmi</label>
+                                                            <input type="email" className="w-full p-4 bg-slate-100 dark:bg-slate-700 rounded-xl outline-none font-bold italic shadow-inner border border-transparent dark:border-slate-600 focus:border-brand-orange dark:text-white" value={content.contact.email} onChange={(e)=>setContent({...content, contact:{...content.contact, email: e.target.value}})} />
                                                         </div>
                                                     </div>
                                                     <button onClick={()=>handleUpdateItem('contact', content.contact)} className="bg-brand-orange text-white px-10 py-4 rounded-xl font-black uppercase text-[10px] w-full shadow-xl hover:bg-brand-navy transition-colors mt-4">Simpan Informasi Kontak</button>
                                                 </div>
                                             ) : (
                                                 content[cmsTab].map(item => (
-                                                    <div key={item.id} className="flex items-center gap-6 p-4 rounded-2xl bg-slate-50 border group hover:border-brand-orange">
+                                                    <div key={item.id} className="flex items-center gap-6 p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-transparent dark:border-slate-600 group hover:border-brand-orange dark:hover:border-brand-orange">
                                                         <img src={item.img || item.url} className="w-16 h-16 rounded-xl object-cover shadow-md" />
                                                         <div className="flex-grow text-left">
-                                                            <h4 className="font-black text-brand-navy uppercase italic">{item.name || item.title}</h4>
+                                                            <h4 className="font-black text-brand-navy dark:text-white uppercase italic">{item.name || item.title}</h4>
                                                             <p className="text-[9px] font-black uppercase text-brand-orange italic">{item.role || item.category || 'Konten'}</p>
                                                         </div>
                                                         <div className="flex gap-2">
-                                                            <button onClick={() => setEditItem({ type: cmsTab, data: item })} className="w-10 h-10 bg-white border rounded-lg flex items-center justify-center hover:bg-brand-navy hover:text-white transition-all shadow-sm"><Icon name="fa-edit text-xs" /></button>
-                                                            <button onClick={() => handleDeleteItem(cmsTab, item.id)} className="w-10 h-10 bg-white border rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm"><Icon name="fa-trash-alt text-xs" /></button>
+                                                            <button onClick={() => setEditItem({ type: cmsTab, data: item })} className="w-10 h-10 bg-white dark:bg-slate-800 border dark:border-slate-600 rounded-lg flex items-center justify-center dark:text-white hover:bg-brand-navy dark:hover:bg-slate-600 hover:text-white transition-all shadow-sm"><Icon name="fa-edit text-xs" /></button>
+                                                            <button onClick={() => handleDeleteItem(cmsTab, item.id)} className="w-10 h-10 bg-white dark:bg-slate-800 border dark:border-slate-600 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm"><Icon name="fa-trash-alt text-xs" /></button>
                                                         </div>
                                                     </div>
                                                 ))
@@ -792,23 +834,23 @@
                         </section>
                     );
                     case 'program': return (
-                        <section className="pt-40 pb-24 bg-white px-6 animate-fade-in text-left">
+                        <section className="pt-40 pb-24 px-6 animate-fade-in text-left">
                             <div className="container mx-auto max-w-7xl">
                                 <SectionHeader title="Kurikulum Juara" subtitle="Program pembinaan berjenjang dengan standar nasional untuk mencetak atlet futsal profesional." center />
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-                                    <div className="bg-slate-100 rounded-[3rem] p-10 md:p-14 border border-slate-200 shadow-lg text-left group hover:-translate-y-2 transition-transform duration-300">
+                                    <div className="bg-slate-100 dark:bg-slate-800 rounded-[3rem] p-10 md:p-14 border border-slate-200 dark:border-slate-700 shadow-lg text-left group hover:-translate-y-2 transition-transform duration-300">
                                         <div className="flex justify-between items-start mb-6">
-                                            <h3 className="text-6xl font-black uppercase italic text-slate-300 sport-italic group-hover:text-brand-orange transition-colors">U-10</h3>
-                                            <span className="bg-white text-slate-500 px-4 py-2 rounded-full text-[10px] font-black uppercase italic shadow-sm">Grassroots</span>
+                                            <h3 className="text-6xl font-black uppercase italic text-slate-300 dark:text-slate-600 sport-italic group-hover:text-brand-orange transition-colors">U-10</h3>
+                                            <span className="bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-4 py-2 rounded-full text-[10px] font-black uppercase italic shadow-sm">Grassroots</span>
                                         </div>
-                                        <p className="text-lg font-medium text-slate-600 italic mb-8 leading-relaxed">Tahap perkenalan futsal. Fokus pada koordinasi motorik, kegembiraan bermain, dan sentuhan dasar dengan bola.</p>
-                                        <ul className="space-y-3 mb-10 font-bold text-sm italic text-slate-500">
+                                        <p className="text-lg font-medium text-slate-600 dark:text-slate-300 italic mb-8 leading-relaxed">Tahap perkenalan futsal. Fokus pada koordinasi motorik, kegembiraan bermain, dan sentuhan dasar dengan bola.</p>
+                                        <ul className="space-y-3 mb-10 font-bold text-sm italic text-slate-500 dark:text-slate-400">
                                             <li><Icon name="fa-check text-brand-orange mr-2" /> Ball feeling & control</li>
                                             <li><Icon name="fa-check text-brand-orange mr-2" /> Fun games & motor skills</li>
                                             <li><Icon name="fa-check text-brand-orange mr-2" /> Pembentukan karakter dasar</li>
                                         </ul>
-                                        <button onClick={() => { setTeamFilter('students'); setStudentCategoryFilter('U-10'); navigateTo('team'); }} className="w-full bg-white text-brand-navy py-5 rounded-2xl font-black uppercase text-[10px] italic shadow-md hover:bg-brand-orange hover:text-white transition-all">Lihat Skuad U-10</button>
+                                        <button onClick={() => { setTeamFilter('students'); setStudentCategoryFilter('U-10'); navigateTo('team'); }} className="w-full bg-white dark:bg-slate-700 text-brand-navy dark:text-white py-5 rounded-2xl font-black uppercase text-[10px] italic shadow-md hover:bg-brand-orange hover:text-white transition-all">Lihat Skuad U-10</button>
                                     </div>
 
                                     <div className="bg-brand-navy rounded-[3rem] p-10 md:p-14 text-white shadow-2xl text-left group hover:-translate-y-2 transition-transform duration-300 relative overflow-hidden">
@@ -828,18 +870,18 @@
                                         </div>
                                     </div>
 
-                                    <div className="bg-white rounded-[3rem] p-10 md:p-14 text-brand-navy border-4 border-brand-navy shadow-xl text-left group hover:-translate-y-2 transition-transform duration-300">
+                                    <div className="bg-white dark:bg-slate-800 rounded-[3rem] p-10 md:p-14 text-brand-navy dark:text-white border-4 border-brand-navy dark:border-slate-700 shadow-xl text-left group hover:-translate-y-2 transition-transform duration-300">
                                         <div className="flex justify-between items-start mb-6">
-                                            <h3 className="text-6xl font-black uppercase italic sport-italic text-brand-navy">U-14</h3>
-                                            <span className="bg-slate-100 text-brand-navy px-4 py-2 rounded-full text-[10px] font-black uppercase italic border border-slate-200">Intermediate</span>
+                                            <h3 className="text-6xl font-black uppercase italic sport-italic text-brand-navy dark:text-white">U-14</h3>
+                                            <span className="bg-slate-100 dark:bg-slate-700 text-brand-navy dark:text-white px-4 py-2 rounded-full text-[10px] font-black uppercase italic border border-slate-200 dark:border-slate-600">Intermediate</span>
                                         </div>
-                                        <p className="text-lg font-medium text-slate-600 italic mb-8 leading-relaxed">Pemantapan taktik tim, strategi formasi dasar, transisi menyerang-bertahan, dan penguatan fisik atlet.</p>
-                                        <ul className="space-y-3 mb-10 font-bold text-sm italic text-slate-700">
+                                        <p className="text-lg font-medium text-slate-600 dark:text-slate-300 italic mb-8 leading-relaxed">Pemantapan taktik tim, strategi formasi dasar, transisi menyerang-bertahan, dan penguatan fisik atlet.</p>
+                                        <ul className="space-y-3 mb-10 font-bold text-sm italic text-slate-700 dark:text-slate-400">
                                             <li><Icon name="fa-bolt text-brand-orange mr-2" /> Taktik grup (2v2, 3v3)</li>
                                             <li><Icon name="fa-bolt text-brand-orange mr-2" /> Penguatan kondisi fisik (Strength & Agility)</li>
                                             <li><Icon name="fa-bolt text-brand-orange mr-2" /> Transisi Positif & Negatif</li>
                                         </ul>
-                                        <button onClick={() => { setTeamFilter('students'); setStudentCategoryFilter('U-14'); navigateTo('team'); }} className="w-full bg-brand-navy text-white py-5 rounded-2xl font-black uppercase text-[10px] italic shadow-xl shadow-brand-navy/20 hover:bg-brand-orange transition-all">Lihat Skuad U-14</button>
+                                        <button onClick={() => { setTeamFilter('students'); setStudentCategoryFilter('U-14'); navigateTo('team'); }} className="w-full bg-brand-navy dark:bg-brand-orange text-white py-5 rounded-2xl font-black uppercase text-[10px] italic shadow-xl shadow-brand-navy/20 dark:shadow-brand-orange/20 hover:bg-brand-orange dark:hover:bg-white dark:hover:text-brand-orange transition-all">Lihat Skuad U-14</button>
                                     </div>
 
                                     <div className="bg-gradient-to-br from-brand-orange to-[#FF8C42] rounded-[3rem] p-10 md:p-14 text-white shadow-2xl text-left group hover:-translate-y-2 transition-transform duration-300">
@@ -857,22 +899,22 @@
                                     </div>
                                 </div>
 
-                                <div className="bg-slate-50 rounded-[4rem] p-10 md:p-16 border shadow-inner">
+                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-[4rem] p-10 md:p-16 border border-transparent dark:border-slate-700 shadow-inner dark:shadow-none">
                                     <div className="grid md:grid-cols-3 gap-10 text-center">
                                         <div>
-                                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-brand-orange text-2xl shadow-md mx-auto mb-6"><Icon name="fa-id-card" /></div>
-                                            <h4 className="font-black italic uppercase text-lg mb-2">Pelatih Berlisensi</h4>
-                                            <p className="text-slate-500 text-sm italic font-medium leading-relaxed">Dibimbing langsung oleh head coach dan tim pelatih bersertifikasi resmi nasional.</p>
+                                            <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center text-brand-orange text-2xl shadow-md mx-auto mb-6"><Icon name="fa-id-card" /></div>
+                                            <h4 className="font-black italic uppercase text-lg mb-2 dark:text-white">Pelatih Berlisensi</h4>
+                                            <p className="text-slate-500 dark:text-slate-400 text-sm italic font-medium leading-relaxed">Dibimbing langsung oleh head coach dan tim pelatih bersertifikasi resmi nasional.</p>
                                         </div>
                                         <div>
-                                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-brand-orange text-2xl shadow-md mx-auto mb-6"><Icon name="fa-stopwatch" /></div>
-                                            <h4 className="font-black italic uppercase text-lg mb-2">Latihan Terukur</h4>
-                                            <p className="text-slate-500 text-sm italic font-medium leading-relaxed">Program evaluasi periodik, scouting report individual, dan pencatatan statistik atlet.</p>
+                                            <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center text-brand-orange text-2xl shadow-md mx-auto mb-6"><Icon name="fa-stopwatch" /></div>
+                                            <h4 className="font-black italic uppercase text-lg mb-2 dark:text-white">Latihan Terukur</h4>
+                                            <p className="text-slate-500 dark:text-slate-400 text-sm italic font-medium leading-relaxed">Program evaluasi periodik, scouting report individual, dan pencatatan statistik atlet.</p>
                                         </div>
                                         <div>
-                                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-brand-orange text-2xl shadow-md mx-auto mb-6"><Icon name="fa-trophy" /></div>
-                                            <h4 className="font-black italic uppercase text-lg mb-2">Jalur Profesional</h4>
-                                            <p className="text-slate-500 text-sm italic font-medium leading-relaxed">Kesempatan tampil di liga regional, PORPROV, hingga seleksi tim futsal profesional.</p>
+                                            <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center text-brand-orange text-2xl shadow-md mx-auto mb-6"><Icon name="fa-trophy" /></div>
+                                            <h4 className="font-black italic uppercase text-lg mb-2 dark:text-white">Jalur Profesional</h4>
+                                            <p className="text-slate-500 dark:text-slate-400 text-sm italic font-medium leading-relaxed">Kesempatan tampil di liga regional, PORPROV, hingga seleksi tim futsal profesional.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -880,16 +922,16 @@
                         </section>
                     );
                     case 'news': return (
-                        <section className="pt-40 pb-24 bg-white px-6 animate-fade-in text-left">
+                        <section className="pt-40 pb-24 px-6 animate-fade-in text-left">
                             <div className="container mx-auto">
                                 <SectionHeader title="Media Warta" subtitle="Informasi terbaru seputar akademi." center />
                                 <div className="grid md:grid-cols-3 gap-8">
                                     {content.news.map(n => (
-                                        <div key={n.id} onClick={() => { setSelectedNews(n); setPage('news-detail'); }} className="card-modern p-6 bg-slate-50 rounded-4xl border cursor-pointer">
+                                        <div key={n.id} onClick={() => { setSelectedNews(n); setPage('news-detail'); }} className="card-modern p-6 bg-slate-50 dark:bg-slate-800/50 rounded-4xl border border-transparent dark:border-slate-700 cursor-pointer">
                                             <div className="aspect-video rounded-3xl overflow-hidden mb-6"><img src={n.img} loading="lazy" className="w-full h-full object-cover" /></div>
                                             <span className="text-[10px] font-black text-brand-orange uppercase mb-3 block italic">{formatDateIndo(n.date)}</span>
-                                            <h4 className="text-xl font-black uppercase italic leading-tight mb-4">{n.title}</h4>
-                                            <p className="text-slate-400 text-sm line-clamp-3 italic leading-relaxed">{n.body}</p>
+                                            <h4 className="text-xl font-black uppercase italic leading-tight mb-4 dark:text-white">{n.title}</h4>
+                                            <p className="text-slate-400 dark:text-slate-400 text-sm line-clamp-3 italic leading-relaxed">{n.body}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -897,12 +939,12 @@
                         </section>
                     );
                     case 'gallery': return (
-                        <section className="pt-40 pb-24 bg-white px-6 animate-fade-in text-left">
+                        <section className="pt-40 pb-24 px-6 animate-fade-in text-left">
                             <div className="container mx-auto">
                                 <SectionHeader title="Dokumentasi Visual" subtitle="Galeri kegiatan dan momen penting." />
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                     {content.gallery.map(g => (
-                                        <div key={g.id} onClick={() => setSelectedGalleryImg(g.url)} className="aspect-square rounded-3xl overflow-hidden shadow-xl border-4 border-white hover:scale-[1.05] transition-all cursor-pointer">
+                                        <div key={g.id} onClick={() => setSelectedGalleryImg(g.url)} className="aspect-square rounded-3xl overflow-hidden shadow-xl border-4 border-white dark:border-slate-800 hover:scale-[1.05] transition-all cursor-pointer">
                                             <img src={g.url} loading="lazy" className="w-full h-full object-cover" />
                                         </div>
                                     ))}
@@ -911,12 +953,12 @@
                         </section>
                     );
                     case 'news-detail': return selectedNews && (
-                        <section className="pt-40 pb-24 bg-white animate-fade-in px-6 text-left">
+                        <section className="pt-40 pb-24 animate-fade-in px-6 text-left">
                             <div className="container mx-auto max-w-4xl">
-                                <button onClick={() => setPage('news')} className="mb-10 text-[10px] font-black uppercase text-brand-orange italic hover:text-brand-navy transition-colors"><Icon name="fa-arrow-left mr-2" /> Kembali</button>
+                                <button onClick={() => setPage('news')} className="mb-10 text-[10px] font-black uppercase text-brand-orange italic hover:text-brand-navy dark:hover:text-white transition-colors"><Icon name="fa-arrow-left mr-2" /> Kembali</button>
                                 <img src={selectedNews.img} className="w-full rounded-5xl shadow-2xl mb-12 object-cover max-h-[60vh]" />
-                                <h1 className="text-4xl md:text-6xl font-black uppercase italic mb-8">{selectedNews.title}</h1>
-                                <div className="prose prose-xl text-slate-600 italic whitespace-pre-line leading-relaxed border-t pt-8">{selectedNews.body}</div>
+                                <h1 className="text-4xl md:text-6xl font-black uppercase italic mb-8 dark:text-white">{selectedNews.title}</h1>
+                                <div className="prose prose-xl text-slate-600 dark:text-slate-300 italic whitespace-pre-line leading-relaxed border-t dark:border-slate-800 pt-8">{selectedNews.body}</div>
                             </div>
                         </section>
                     );
@@ -924,7 +966,7 @@
             };
 
             return (
-                <div className="min-h-screen flex flex-col relative">
+                <div className="min-h-screen flex flex-col relative transition-colors duration-300">
                     {/* Toast Notification Modern */}
                     {toast && (
                         <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[2000] animate-toast">
@@ -936,28 +978,28 @@
                     )}
 
                     {isLoading && <div className="fixed inset-0 flex items-center justify-center loading-overlay text-brand-orange z-[1000]"><Icon name="fa-futbol fa-spin text-6xl" /></div>}
-                    {isSaving && <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-brand-navy/80 backdrop-blur-sm text-white font-black italic uppercase text-xl animate-pulse">Menghubungkan Cloud...</div>}
+                    {isSaving && <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-brand-navy/80 dark:bg-slate-900/80 backdrop-blur-sm text-white font-black italic uppercase text-xl animate-pulse">Menghubungkan Cloud...</div>}
                     
                     <Navbar />
                     <main className="flex-grow">{renderPage()}</main>
 
                     {/* Footer Profesional Baru */}
-                    <footer className="bg-brand-navy text-white pt-24 pb-12 border-t border-white/5 relative overflow-hidden">
+                    <footer className="bg-brand-navy dark:bg-slate-950 text-white pt-24 pb-12 border-t border-white/5 relative overflow-hidden transition-colors duration-300">
                         <div className="container mx-auto px-6 relative z-10">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16 text-center md:text-left">
                                 <div>
                                     <h3 className="text-3xl font-black text-brand-orange mb-6 tracking-tighter italic uppercase">AFK ANAMBAS</h3>
-                                    <p className="text-white/60 text-sm leading-relaxed mb-8 italic">{content.site.heroSubtitle}</p>
+                                    <p className="text-white/60 dark:text-slate-400 text-sm leading-relaxed mb-8 italic">{content.site.heroSubtitle}</p>
                                     <div className="flex justify-center md:justify-start gap-4">
-                                        <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-orange hover:-translate-y-1 transition-all"><Icon name="fab fa-instagram" /></a>
-                                        <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-orange hover:-translate-y-1 transition-all"><Icon name="fab fa-youtube" /></a>
-                                        <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-orange hover:-translate-y-1 transition-all"><Icon name="fab fa-tiktok" /></a>
-                                        <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-orange hover:-translate-y-1 transition-all"><Icon name="fab fa-facebook-f" /></a>
+                                        <a href="#" className="w-10 h-10 rounded-full bg-white/10 dark:bg-slate-800 flex items-center justify-center hover:bg-brand-orange transition-all"><Icon name="fab fa-instagram" /></a>
+                                        <a href="#" className="w-10 h-10 rounded-full bg-white/10 dark:bg-slate-800 flex items-center justify-center hover:bg-brand-orange transition-all"><Icon name="fab fa-youtube" /></a>
+                                        <a href="#" className="w-10 h-10 rounded-full bg-white/10 dark:bg-slate-800 flex items-center justify-center hover:bg-brand-orange transition-all"><Icon name="fab fa-tiktok" /></a>
+                                        <a href="#" className="w-10 h-10 rounded-full bg-white/10 dark:bg-slate-800 flex items-center justify-center hover:bg-brand-orange transition-all"><Icon name="fab fa-facebook-f" /></a>
                                     </div>
                                 </div>
                                 <div>
                                     <h4 className="text-lg font-black uppercase italic mb-6">Kontak & Lokasi</h4>
-                                    <ul className="space-y-4 text-white/70 text-sm italic font-bold">
+                                    <ul className="space-y-4 text-white/70 dark:text-slate-400 text-sm italic font-bold">
                                         <li className="flex items-start justify-center md:justify-start gap-3"><Icon name="fa-map-marker-alt mt-1 text-brand-orange" /> <span className="text-left">{content.contact.address}</span></li>
                                         <li className="flex items-center justify-center md:justify-start gap-3"><Icon name="fa-phone text-brand-orange" /> {content.contact.phone}</li>
                                         <li className="flex items-center justify-center md:justify-start gap-3"><Icon name="fa-envelope text-brand-orange" /> {content.contact.email}</li>
@@ -965,7 +1007,7 @@
                                 </div>
                                 <div>
                                     <h4 className="text-lg font-black uppercase italic mb-6">Navigasi Cepat</h4>
-                                    <ul className="space-y-3 text-white/70 text-sm font-black uppercase italic tracking-widest text-[10px]">
+                                    <ul className="space-y-3 text-white/70 dark:text-slate-400 text-sm font-black uppercase italic tracking-widest text-[10px]">
                                         <li><a href="#" onClick={(e)=>{e.preventDefault(); navigateTo('about')}} className="hover:text-brand-orange transition-colors">Profil Akademi</a></li>
                                         <li><a href="#" onClick={(e)=>{e.preventDefault(); navigateTo('program')}} className="hover:text-brand-orange transition-colors">Program Latihan</a></li>
                                         <li><a href="#" onClick={(e)=>{e.preventDefault(); navigateTo('team')}} className="hover:text-brand-orange transition-colors">Database Skuad</a></li>
@@ -973,8 +1015,8 @@
                                     </ul>
                                 </div>
                             </div>
-                            <div className="text-center border-t border-white/10 pt-8">
-                                <p className="text-white/20 text-[9px] uppercase tracking-[0.3em] font-black italic">© 2026 AFK KEPULAUAN ANAMBAS • PROFESSIONAL ACADEMY SYSTEM</p>
+                            <div className="text-center border-t border-white/10 dark:border-slate-800 pt-8">
+                                <p className="text-white/20 dark:text-slate-500 text-[9px] uppercase tracking-[0.3em] font-black italic">© 2026 AFK KEPULAUAN ANAMBAS • PROFESSIONAL ACADEMY SYSTEM</p>
                             </div>
                         </div>
                     </footer>
@@ -992,73 +1034,76 @@
                         </div>
                     )}
 
+                    {/* Modal Announcement */}
                     {showAnnouncement && page === 'home' && (
-                        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-brand-navy/95 backdrop-blur-3xl animate-fade-in" onClick={() => setShowAnnouncement(false)}>
-                            <div className="relative w-full max-w-lg bg-white rounded-[3rem] overflow-hidden shadow-2xl border-t-8 border-brand-orange animate-zoom flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
-                                <div className="w-full bg-slate-100 flex justify-center items-center overflow-hidden shrink-0">
+                        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-brand-navy/95 dark:bg-slate-900/95 backdrop-blur-3xl animate-fade-in" onClick={() => setShowAnnouncement(false)}>
+                            <div className="relative w-full max-w-lg bg-white dark:bg-slate-800 rounded-[3rem] overflow-hidden shadow-2xl border-t-8 border-brand-orange animate-zoom flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                                <div className="w-full bg-slate-100 dark:bg-slate-900 flex justify-center items-center overflow-hidden shrink-0">
                                     <img src={content.announcement.img} className="w-full max-h-[50vh] object-contain" />
                                 </div>
                                 <div className="p-10 text-left overflow-y-auto no-scrollbar">
-                                    <h2 className="text-3xl font-black uppercase italic mb-4">{content.announcement.title}</h2>
-                                    <p className="text-slate-500 italic mb-8 leading-relaxed">{content.announcement.body}</p>
-                                    <button onClick={() => setShowAnnouncement(false)} className="w-full bg-brand-navy text-white py-5 rounded-2xl font-black uppercase italic shadow-xl shrink-0 hover:bg-brand-orange transition-colors">Lanjutkan</button>
+                                    <h2 className="text-3xl font-black uppercase italic mb-4 dark:text-white">{content.announcement.title}</h2>
+                                    <p className="text-slate-500 dark:text-slate-300 italic mb-8 leading-relaxed">{content.announcement.body}</p>
+                                    <button onClick={() => setShowAnnouncement(false)} className="w-full bg-brand-navy dark:bg-brand-orange text-white py-5 rounded-2xl font-black uppercase italic shadow-xl shrink-0 hover:bg-brand-orange dark:hover:bg-white dark:hover:text-brand-orange transition-colors">Lanjutkan</button>
                                 </div>
                             </div>
                         </div>
                     )}
 
+                    {/* Modal Login */}
                     {showLogin && (
-                        <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-brand-navy/98 backdrop-blur-3xl animate-fade-in">
-                            <div className="bg-white w-full max-w-sm rounded-4xl p-12 shadow-2xl relative border-t-8 border-brand-orange" onClick={e => e.stopPropagation()}>
-                                <h3 className="text-3xl font-black text-brand-navy text-center uppercase italic mb-8">Admin Portal</h3>
+                        <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-brand-navy/98 dark:bg-slate-950/95 backdrop-blur-3xl animate-fade-in">
+                            <div className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-4xl p-12 shadow-2xl relative border-t-8 border-brand-orange" onClick={e => e.stopPropagation()}>
+                                <h3 className="text-3xl font-black text-brand-navy dark:text-white text-center uppercase italic mb-8">Admin Portal</h3>
                                 <form onSubmit={handleLogin} className="space-y-4 text-left">
-                                    <input className="w-full px-6 py-4 rounded-xl bg-slate-100 outline-none font-bold italic shadow-inner focus:border-brand-orange border transition-colors" name="email" placeholder="Email Admin" required />
+                                    <input className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 outline-none font-bold italic shadow-inner border border-transparent dark:border-slate-600 focus:border-brand-orange dark:text-white transition-colors" name="email" placeholder="Email Admin" required />
                                     
                                     <div className="relative w-full">
-                                        <input type={showPassword ? "text" : "password"} name="password" className="w-full px-6 py-4 pr-12 rounded-xl bg-slate-100 outline-none font-bold italic shadow-inner focus:border-brand-orange border transition-colors" placeholder="Password" required />
-                                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-orange transition-colors text-lg">
+                                        <input type={showPassword ? "text" : "password"} name="password" className="w-full px-6 py-4 pr-12 rounded-xl bg-slate-100 dark:bg-slate-700 outline-none font-bold italic shadow-inner border border-transparent dark:border-slate-600 focus:border-brand-orange dark:text-white transition-colors" placeholder="Password" required />
+                                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-400 hover:text-brand-orange transition-colors text-lg">
                                             <Icon name={showPassword ? "fa-eye-slash" : "fa-eye"} />
                                         </button>
                                     </div>
                                     
-                                    <button type="submit" className="w-full bg-brand-navy text-white py-4 rounded-xl font-black uppercase italic shadow-xl mt-4 hover:bg-brand-orange transition-colors">Masuk Sistem</button>
-                                    <button type="button" onClick={() => setShowLogin(false)} className="w-full text-slate-400 font-bold uppercase text-[10px] mt-4 italic text-center hover:text-brand-navy transition-colors">Batal</button>
+                                    <button type="submit" className="w-full bg-brand-navy dark:bg-brand-orange text-white py-4 rounded-xl font-black uppercase italic shadow-xl mt-4 hover:bg-brand-orange dark:hover:bg-white dark:hover:text-brand-orange transition-colors">Masuk Sistem</button>
+                                    <button type="button" onClick={() => setShowLogin(false)} className="w-full text-slate-400 dark:text-slate-500 font-bold uppercase text-[10px] mt-4 italic text-center hover:text-brand-navy dark:hover:text-white transition-colors">Batal</button>
                                 </form>
                             </div>
                         </div>
                     )}
 
+                    {/* Modal Profil Pemain */}
                     {selectedStudent && (
-                        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-brand-navy/95 backdrop-blur-xl animate-fade-in" onClick={() => setSelectedStudent(null)}>
-                            <div className="bg-white w-full max-w-5xl rounded-5xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row max-h-[95vh]" onClick={e => e.stopPropagation()}>
-                                <button onClick={() => setSelectedStudent(null)} className="absolute top-8 right-8 w-12 h-12 glass rounded-full z-20 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-all shadow-xl font-black"><Icon name="fa-times" /></button>
-                                <div className="md:w-1/3 h-[300px] md:h-auto bg-slate-200 relative shadow-inner">
+                        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-brand-navy/95 dark:bg-slate-950/95 backdrop-blur-xl animate-fade-in" onClick={() => setSelectedStudent(null)}>
+                            <div className="bg-white dark:bg-slate-800 w-full max-w-5xl rounded-5xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row max-h-[95vh]" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setSelectedStudent(null)} className="absolute top-8 right-8 w-12 h-12 glass dark:dark-glass rounded-full z-20 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-all shadow-xl font-black"><Icon name="fa-times" /></button>
+                                <div className="md:w-1/3 h-[300px] md:h-auto bg-slate-200 dark:bg-slate-700 relative shadow-inner">
                                     <img src={selectedStudent.img} className="w-full h-full object-cover" />
                                     <div className="absolute top-8 left-8 w-16 h-16 bg-brand-orange text-white rounded-2xl flex items-center justify-center font-black text-3xl shadow-2xl italic">#{selectedStudent.jerseyNumber || '00'}</div>
                                 </div>
                                 <div className="md:w-2/3 p-12 overflow-y-auto text-left no-scrollbar">
                                     <span className="bg-brand-orange/10 text-brand-orange px-4 py-2 rounded-full text-[10px] font-black uppercase italic mb-6 inline-block">Athlete Profile</span>
-                                    <h3 className="text-4xl md:text-5xl font-black uppercase italic mb-10 leading-tight italic tracking-tighter">{selectedStudent.name}</h3>
-                                    <div className="grid grid-cols-2 gap-8 border-b pb-10 italic">
-                                        <div><p className="text-[8px] font-black text-slate-400 uppercase italic leading-none mb-1">Posisi</p><p className="font-bold text-lg italic uppercase">{selectedStudent.position || 'Atlet'}</p></div>
-                                        <div><p className="text-[8px] font-black text-slate-400 uppercase italic leading-none mb-1">Kategori</p><p className="font-bold text-lg italic uppercase">{selectedStudent.category}</p></div>
-                                        <div><p className="text-[8px] font-black text-slate-400 uppercase italic leading-none mb-1">Sekolah</p><p className="font-bold text-sm italic uppercase">{selectedStudent.school || '-'}</p></div>
-                                        <div><p className="text-[8px] font-black text-slate-400 uppercase italic leading-none mb-1">Status</p><p className="font-bold text-sm italic uppercase text-green-600">Terdaftar Resmi</p></div>
+                                    <h3 className="text-4xl md:text-5xl font-black uppercase italic mb-10 leading-tight italic tracking-tighter dark:text-white">{selectedStudent.name}</h3>
+                                    <div className="grid grid-cols-2 gap-8 border-b dark:border-slate-700 pb-10 italic">
+                                        <div><p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase italic leading-none mb-1">Posisi</p><p className="font-bold text-lg italic uppercase dark:text-slate-300">{selectedStudent.position || 'Atlet'}</p></div>
+                                        <div><p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase italic leading-none mb-1">Kategori</p><p className="font-bold text-lg italic uppercase dark:text-slate-300">{selectedStudent.category}</p></div>
+                                        <div><p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase italic leading-none mb-1">Sekolah</p><p className="font-bold text-sm italic uppercase dark:text-slate-300">{selectedStudent.school || '-'}</p></div>
+                                        <div><p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase italic leading-none mb-1">Status</p><p className="font-bold text-sm italic uppercase text-green-600 dark:text-green-400">Terdaftar Resmi</p></div>
                                     </div>
-                                    <div className="mt-10 p-6 bg-slate-50 rounded-4xl border border-slate-100 italic font-bold">
-                                        <div className="grid grid-cols-2 gap-4 text-sm uppercase">
-                                            <div><span className="text-[8px] text-slate-300 block mb-1 font-black">Alamat</span> {selectedStudent.address || '-'}</div>
-                                            <div><span className="text-[8px] text-slate-300 block mb-1 font-black">TTL</span> {selectedStudent.placeOfBirth}, {formatDateIndo(selectedStudent.dateOfBirth)}</div>
-                                            <div><span className="text-[8px] text-slate-300 block mb-1 font-black">Tinggi</span> {selectedStudent.height} CM</div>
-                                            <div><span className="text-[8px] text-slate-300 block mb-1 font-black">Berat</span> {selectedStudent.weight} KG</div>
-                                            <div><span className="text-[8px] text-slate-300 block mb-1 font-black">Golongan Darah</span> {selectedStudent.bloodType}</div>
-                                            <div><span className="text-[8px] text-slate-300 block mb-1 font-black">Kaki Dominan</span> {selectedStudent.foot}</div>
+                                    <div className="mt-10 p-6 bg-slate-50 dark:bg-slate-700/50 rounded-4xl border border-slate-100 dark:border-slate-600 italic font-bold">
+                                        <div className="grid grid-cols-2 gap-4 text-sm uppercase dark:text-slate-300">
+                                            <div><span className="text-[8px] text-slate-300 dark:text-slate-500 block mb-1 font-black">Alamat</span> {selectedStudent.address || '-'}</div>
+                                            <div><span className="text-[8px] text-slate-300 dark:text-slate-500 block mb-1 font-black">TTL</span> {selectedStudent.placeOfBirth}, {formatDateIndo(selectedStudent.dateOfBirth)}</div>
+                                            <div><span className="text-[8px] text-slate-300 dark:text-slate-500 block mb-1 font-black">Tinggi</span> {selectedStudent.height} CM</div>
+                                            <div><span className="text-[8px] text-slate-300 dark:text-slate-500 block mb-1 font-black">Berat</span> {selectedStudent.weight} KG</div>
+                                            <div><span className="text-[8px] text-slate-300 dark:text-slate-500 block mb-1 font-black">Gol. Darah</span> {selectedStudent.bloodType}</div>
+                                            <div><span className="text-[8px] text-slate-300 dark:text-slate-500 block mb-1 font-black">Kaki Dominan</span> {selectedStudent.foot}</div>
                                         </div>
                                     </div>
                                     {isAdmin && (
-                                        <div className="mt-10 p-6 bg-brand-navy rounded-3xl text-white font-black italic uppercase">
+                                        <div className="mt-10 p-6 bg-brand-navy dark:bg-slate-900 rounded-3xl text-white font-black italic uppercase">
                                             <p className="text-[8px] text-brand-orange mb-4">Data Privat Manajemen</p>
-                                            <div className="grid grid-cols-2 gap-4 text-xs">
+                                            <div className="grid grid-cols-2 gap-4 text-xs dark:text-slate-300">
                                                 <div>WA: {selectedStudent.phone}</div>
                                                 <div>Ayah: {selectedStudent.fatherName}</div>
                                                 <div>Ibu: {selectedStudent.motherName}</div>
@@ -1072,44 +1117,45 @@
                         </div>
                     )}
 
+                    {/* Modal Editor CMS */}
                     {editItem && (
-                        <div className="fixed inset-0 z-[600] flex items-center justify-center p-6 bg-brand-navy/98 backdrop-blur-3xl animate-fade-in text-left">
-                            <div className="bg-white w-full max-w-3xl rounded-5xl p-12 overflow-y-auto max-h-[90vh] shadow-2xl border-t-8 border-brand-orange no-scrollbar" onClick={e => e.stopPropagation()}>
+                        <div className="fixed inset-0 z-[600] flex items-center justify-center p-6 bg-brand-navy/98 dark:bg-slate-950/98 backdrop-blur-3xl animate-fade-in text-left">
+                            <div className="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-5xl p-12 overflow-y-auto max-h-[90vh] shadow-2xl border-t-8 border-brand-orange no-scrollbar" onClick={e => e.stopPropagation()}>
                                 <div className="flex justify-between items-center mb-10">
-                                    <h3 className="text-2xl font-black uppercase italic underline decoration-brand-orange decoration-4">Editor {editItem.type.toUpperCase()}</h3>
-                                    <button onClick={() => setEditItem(null)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"><Icon name="fa-times" /></button>
+                                    <h3 className="text-2xl font-black uppercase italic underline decoration-brand-orange decoration-4 dark:text-white">Editor {editItem.type.toUpperCase()}</h3>
+                                    <button onClick={() => setEditItem(null)} className="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white dark:text-white transition-all"><Icon name="fa-times" /></button>
                                 </div>
                                 <form onSubmit={(e) => { e.preventDefault(); handleUpdateItem(editItem.type, editItem.data); }} className="grid gap-6">
-                                    <div className="flex flex-col md:flex-row items-center gap-10 bg-slate-50 p-8 rounded-4xl border-2 border-dashed border-slate-200">
-                                        <img src={editItem.data.img || editItem.data.url || 'https://via.placeholder.com/150'} className="w-32 h-32 rounded-3xl object-cover shadow-2xl border-4 border-white" />
+                                    <div className="flex flex-col md:flex-row items-center gap-10 bg-slate-50 dark:bg-slate-700/50 p-8 rounded-4xl border-2 border-dashed border-slate-200 dark:border-slate-600">
+                                        <img src={editItem.data.img || editItem.data.url || 'https://via.placeholder.com/150'} className="w-32 h-32 rounded-3xl object-cover shadow-2xl border-4 border-white dark:border-slate-600" />
                                         <label className="bg-brand-orange text-white px-10 py-3 rounded-2xl font-black uppercase text-[10px] italic cursor-pointer inline-block shadow-lg hover:bg-brand-navy transition-colors">Pilih Media<input type="file" className="hidden" accept="image/*" onChange={async (e) => { if(e.target.files[0]) { const c = await compressImage(e.target.files[0], 1024, 0.6); setEditItem({...editItem, data: {...editItem.data, [editItem.type==='gallery'?'url':'img']: c}}); }}} /></label>
                                     </div>
                                     <div className="grid gap-4">
-                                        <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Nama / Judul Utama</label><input required className="w-full px-6 py-4 rounded-xl bg-slate-100 font-black italic shadow-inner outline-none border focus:border-brand-orange" value={editItem.data.name || editItem.data.title || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, [ (editItem.type === 'news' || editItem.type === 'gallery') ? 'title' : 'name' ]: e.target.value}})} /></div>
+                                        <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Nama / Judul Utama</label><input required className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-black italic shadow-inner outline-none border border-transparent dark:border-slate-600 focus:border-brand-orange dark:text-white" value={editItem.data.name || editItem.data.title || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, [ (editItem.type === 'news' || editItem.type === 'gallery') ? 'title' : 'name' ]: e.target.value}})} /></div>
                                         {editItem.type === 'students' && (
                                             <Fragment>
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Kategori</label><select className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.category || 'U-12'} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, category: e.target.value}})}><option>U-10</option><option>U-12</option><option>U-14</option><option>U-16</option></select></div>
-                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Jersey</label><input type="number" className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.jerseyNumber || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, jerseyNumber: e.target.value}})} /></div>
+                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Kategori</label><select className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold italic shadow-inner border border-transparent dark:border-slate-600 dark:text-white" value={editItem.data.category || 'U-12'} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, category: e.target.value}})}><option>U-10</option><option>U-12</option><option>U-14</option><option>U-16</option></select></div>
+                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Jersey</label><input type="number" className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold italic shadow-inner border border-transparent dark:border-slate-600 dark:text-white" value={editItem.data.jerseyNumber || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, jerseyNumber: e.target.value}})} /></div>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">TB (cm)</label><input type="number" className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.height || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, height: e.target.value}})} /></div>
-                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">BB (kg)</label><input type="number" className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.weight || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, weight: e.target.value}})} /></div>
+                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">TB (cm)</label><input type="number" className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold italic shadow-inner border border-transparent dark:border-slate-600 dark:text-white" value={editItem.data.height || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, height: e.target.value}})} /></div>
+                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">BB (kg)</label><input type="number" className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold italic shadow-inner border border-transparent dark:border-slate-600 dark:text-white" value={editItem.data.weight || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, weight: e.target.value}})} /></div>
                                                 </div>
-                                                <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Posisi (ALA/PIVOT/GK/ANCHOR)</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.position || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, position: e.target.value}})} /></div>
-                                                <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Sekolah</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.school || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, school: e.target.value}})} /></div>
+                                                <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Posisi (ALA/PIVOT/GK/ANCHOR)</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold italic shadow-inner border border-transparent dark:border-slate-600 dark:text-white" value={editItem.data.position || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, position: e.target.value}})} /></div>
+                                                <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Sekolah</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold italic shadow-inner border border-transparent dark:border-slate-600 dark:text-white" value={editItem.data.school || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, school: e.target.value}})} /></div>
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Ayah</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.fatherName || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, fatherName: e.target.value}})} /></div>
-                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Ibu</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.motherName || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, motherName: e.target.value}})} /></div>
+                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Ayah</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold italic shadow-inner border border-transparent dark:border-slate-600 dark:text-white" value={editItem.data.fatherName || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, fatherName: e.target.value}})} /></div>
+                                                    <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Ibu</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold italic shadow-inner border border-transparent dark:border-slate-600 dark:text-white" value={editItem.data.motherName || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, motherName: e.target.value}})} /></div>
                                                 </div>
-                                                <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Kontak</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" value={editItem.data.phone || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, phone: e.target.value}})} /></div>
-                                                <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Alamat</label><textarea className="w-full px-6 py-4 rounded-xl bg-slate-100 font-medium italic shadow-inner border" value={editItem.data.address || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, address: e.target.value}})} /></div>
+                                                <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Kontak</label><input className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold italic shadow-inner border border-transparent dark:border-slate-600 dark:text-white" value={editItem.data.phone || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, phone: e.target.value}})} /></div>
+                                                <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 ml-4 italic">Alamat</label><textarea className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-medium italic shadow-inner border border-transparent dark:border-slate-600 dark:text-white" value={editItem.data.address || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, address: e.target.value}})} /></div>
                                             </Fragment>
                                         )}
-                                        {editItem.type === 'news' && <textarea className="w-full px-6 py-4 rounded-xl bg-slate-100 font-medium italic shadow-inner border h-40 leading-relaxed" placeholder="Isi Warta" value={editItem.data.body || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, body: e.target.value}})} />}
-                                        {(editItem.type === 'management' || editItem.type === 'coaches') && <input className="w-full px-6 py-4 rounded-xl bg-slate-100 font-bold italic shadow-inner border" placeholder="Jabatan / Lisensi" value={editItem.data.role || editItem.data.license || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, [editItem.type === 'management' ? 'role' : 'license']: e.target.value}})} />}
+                                        {editItem.type === 'news' && <textarea className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-medium italic shadow-inner border border-transparent dark:border-slate-600 h-40 leading-relaxed dark:text-white" placeholder="Isi Warta" value={editItem.data.body || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, body: e.target.value}})} />}
+                                        {(editItem.type === 'management' || editItem.type === 'coaches') && <input className="w-full px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold italic shadow-inner border border-transparent dark:border-slate-600 dark:text-white" placeholder="Jabatan / Lisensi" value={editItem.data.role || editItem.data.license || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, [editItem.type === 'management' ? 'role' : 'license']: e.target.value}})} />}
                                     </div>
-                                    <button type="submit" className="w-full bg-brand-navy text-white py-6 rounded-2xl font-black uppercase text-[11px] italic shadow-xl transition-all hover:bg-brand-orange mt-4 italic">Simpan Perubahan</button>
+                                    <button type="submit" className="w-full bg-brand-navy dark:bg-brand-orange text-white py-6 rounded-2xl font-black uppercase text-[11px] italic shadow-xl transition-all hover:bg-brand-orange dark:hover:bg-white dark:hover:text-brand-orange mt-4 italic">Simpan Perubahan</button>
                                 </form>
                             </div>
                         </div>
