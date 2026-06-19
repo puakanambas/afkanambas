@@ -130,8 +130,8 @@
             return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
         };
 
-        // Kompresi ketat: 800px & quality 0.4 agar data array 3 gambar masuk ke limit Firestore Base64
-        const compressImage = (file, maxWidth = 800, quality = 0.4) => {
+        // Fungsi kompresi gambar disesuaikan agar fleksibel mengatur resolusi
+        const compressImage = (file, maxWidth = 1600, quality = 0.6) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
@@ -459,10 +459,10 @@
                             <div className="container mx-auto px-6 text-center">
                                 <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.4em] block mb-8">Didukung Oleh Mitra Resmi</span>
                                 <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 hover:opacity-100 grayscale hover:grayscale-0 transition-all duration-500">
-                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-shield-halved text-brand-orange" /> BYHILL ANAMBAS</div>
-                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-bolt text-brand-orange" /> KOPI PANCONG</div>
+                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-shield-halved text-brand-orange" />ANAMBAS RUMAH KITA</div>
+                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-bolt text-brand-orange" /> KLINIK SPORT</div>
                                     <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-store text-brand-orange" /> ANAMBAS APPAREL</div>
-                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-handshake text-brand-orange" /> KONI KEPULAUAN ANAMBAS</div>
+                                    <div className="flex items-center gap-2 text-2xl font-black italic text-slate-800"><Icon name="fa-handshake text-brand-orange" /> KONI KEPRI</div>
                                 </div>
                             </div>
                         </section>
@@ -474,7 +474,7 @@
                             <div className="container mx-auto px-6 relative z-10 text-center">
                                 <h2 className="text-4xl md:text-6xl font-black text-white uppercase italic tracking-tighter mb-6">Siap Menjadi Juara?</h2>
                                 <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto font-medium mb-10 leading-relaxed">Pendaftaran siswa baru dan seleksi atlet AFK Anambas tahun 2026 telah dibuka. Mari bergabung dan kembangkan potensimu bersama tim profesional.</p>
-                                <button onClick={() => window.open('https://wa.me/6281275028929', '_blank')} className="inline-flex items-center gap-3 bg-brand-navy text-white px-10 py-5 rounded-full font-black uppercase text-xs italic shadow-2xl hover:scale-105 transition-transform border-2 border-brand-navy hover:border-white">
+                                <button onClick={() => window.open('https://wa.me/6281234567890', '_blank')} className="inline-flex items-center gap-3 bg-brand-navy text-white px-10 py-5 rounded-full font-black uppercase text-xs italic shadow-2xl hover:scale-105 transition-transform border-2 border-brand-navy hover:border-white">
                                     <Icon name="fab fa-whatsapp text-xl text-green-400" /> Hubungi Admin Pendaftaran
                                 </button>
                             </div>
@@ -643,7 +643,8 @@
                                                                                         <Icon name="fa-edit text-xs" />
                                                                                         <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                                                                             if(e.target.files[0]) {
-                                                                                                const c = await compressImage(e.target.files[0], 800, 0.4);
+                                                                                                // Compress image diperbarui menjadi 1600px, quality 60%
+                                                                                                const c = await compressImage(e.target.files[0], 1600, 0.6);
                                                                                                 let newArr = [...heroArr];
                                                                                                 newArr[index] = c;
                                                                                                 setContent({...content, site: {...content.site, heroImages: newArr.filter(Boolean)}});
@@ -666,7 +667,8 @@
                                                                                 <span className="text-[8px] font-black uppercase">Isi Slot {index + 1}</span>
                                                                                 <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                                                                     if(e.target.files[0]) {
-                                                                                        const c = await compressImage(e.target.files[0], 800, 0.4);
+                                                                                        // Compress image diperbarui menjadi 1600px, quality 60%
+                                                                                        const c = await compressImage(e.target.files[0], 1600, 0.6);
                                                                                         let newArr = [...heroArr];
                                                                                         newArr[index] = c;
                                                                                         setContent({...content, site: {...content.site, heroImages: newArr.filter(Boolean)}});
@@ -712,7 +714,7 @@
                                                 <div className="space-y-6">
                                                     <div className="flex items-center gap-6 p-6 bg-slate-50 rounded-4xl border-2 border-dashed">
                                                         <img src={content.announcement.img} className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg" />
-                                                        <label className="bg-brand-orange text-white px-6 py-2 rounded-xl font-black uppercase text-[10px] italic cursor-pointer">Ganti Foto<input type="file" className="hidden" accept="image/*" onChange={async (e) => { if(e.target.files[0]) { const c = await compressImage(e.target.files[0], 800, 0.4); setContent({...content, announcement: {...content.announcement, img: c}}); } }} /></label>
+                                                        <label className="bg-brand-orange text-white px-6 py-2 rounded-xl font-black uppercase text-[10px] italic cursor-pointer">Ganti Foto<input type="file" className="hidden" accept="image/*" onChange={async (e) => { if(e.target.files[0]) { const c = await compressImage(e.target.files[0], 1024, 0.6); setContent({...content, announcement: {...content.announcement, img: c}}); } }} /></label>
                                                     </div>
                                                     <input className="w-full p-4 bg-slate-50 rounded-xl outline-none border focus:border-brand-orange font-black italic" value={content.announcement.title} onChange={(e) => setContent({...content, announcement: {...content.announcement, title: e.target.value}})} />
                                                     <textarea className="w-full p-4 bg-slate-50 rounded-xl outline-none border focus:border-brand-orange font-medium h-32 italic leading-relaxed" value={content.announcement.body} onChange={(e) => setContent({...content, announcement: {...content.announcement, body: e.target.value}})} />
@@ -863,7 +865,7 @@
 
                     <footer className="bg-brand-navy text-white py-16 text-center border-t border-white/5 uppercase font-bold italic">
                         <h3 className="text-2xl font-black text-brand-orange mb-4 tracking-tighter">AFK ANAMBAS</h3>
-                        <p className="text-white/20 text-[9px] uppercase tracking-[0.3em]">© 2023 AFK KEPULAUAN ANAMBAS • PROFESSIONAL ACADEMY SYSTEM</p>
+                        <p className="text-white/20 text-[9px] uppercase tracking-[0.3em]">© 2026 AFK KEPULAUAN ANAMBAS • PROFESSIONAL ACADEMY SYSTEM</p>
                     </footer>
 
                     {/* Modals - Announcement dengan gambar utuh tidak terpotong */}
@@ -950,7 +952,7 @@
                                 <form onSubmit={(e) => { e.preventDefault(); handleUpdateItem(editItem.type, editItem.data); }} className="grid gap-6">
                                     <div className="flex flex-col md:flex-row items-center gap-10 bg-slate-50 p-8 rounded-4xl border-2 border-dashed border-slate-200">
                                         <img src={editItem.data.img || editItem.data.url || 'https://via.placeholder.com/150'} className="w-32 h-32 rounded-3xl object-cover shadow-2xl border-4 border-white" />
-                                        <label className="bg-brand-orange text-white px-10 py-3 rounded-2xl font-black uppercase text-[10px] italic cursor-pointer inline-block shadow-lg">Pilih Media<input type="file" className="hidden" accept="image/*" onChange={async (e) => { if(e.target.files[0]) { const c = await compressImage(e.target.files[0], 800, 0.4); setEditItem({...editItem, data: {...editItem.data, [editItem.type==='gallery'?'url':'img']: c}}); }}} /></label>
+                                        <label className="bg-brand-orange text-white px-10 py-3 rounded-2xl font-black uppercase text-[10px] italic cursor-pointer inline-block shadow-lg">Pilih Media<input type="file" className="hidden" accept="image/*" onChange={async (e) => { if(e.target.files[0]) { const c = await compressImage(e.target.files[0], 1024, 0.6); setEditItem({...editItem, data: {...editItem.data, [editItem.type==='gallery'?'url':'img']: c}}); }}} /></label>
                                     </div>
                                     <div className="grid gap-4">
                                         <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">Nama / Judul Utama</label><input required className="w-full px-6 py-4 rounded-xl bg-slate-100 font-black italic shadow-inner outline-none border focus:border-brand-orange" value={editItem.data.name || editItem.data.title || ''} onChange={(e) => setEditItem({...editItem, data: {...editItem.data, [ (editItem.type === 'news' || editItem.type === 'gallery') ? 'title' : 'name' ]: e.target.value}})} /></div>
