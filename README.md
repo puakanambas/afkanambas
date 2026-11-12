@@ -1,20 +1,29 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Akademi Futsal Anambas (AFK) — Portal Resmi & CMS
 
-# Run and deploy your AI Studio app
+Website portal resmi **Akademi Futsal Kepulauan Anambas (AFK)** dengan tampilan modern berstandar klub profesional, dilengkapi sistem manajemen konten (Admin CMS) terintegrasi.
 
-This contains everything you need to run your app locally.
+## Fitur Utama
 
-View your app in AI Studio: https://ai.studio/apps/e9d06327-b237-447e-9443-aca21b30624c
+- **Multi-Halaman Interaktif**: Navigasi cepat antar halaman *Beranda*, *Program & Kurikulum*, *Tim Pelatih*, *Skuad Pemain*, *Jadwal & Lokasi*, *Berita & Galeri*, serta *FAQ*.
+- **Glassmorphism Floating Navbar**: Navigasi kapsul *frosted glass* modern dengan efek transisi *floating pill*.
+- **Full-Bleed Widescreen Hero**: Showcase visual layar penuh dengan animasi *Ken Burns* dan kontrol slide interaktif.
+- **Direktori Skuad Pemain & Pelatih**: Profil lengkap pemain dan pelatih berlisensi dengan filter kategori usia (`U-9`, `U-12`, `U-15`, `U-17`) serta posisi.
+- **Partner & Sponsor Resmi**: Grid interaktif logo dan nama sponsor/mitra resmi sebelum footer.
+- **Admin CMS Terpadu**: Kelola seluruh konten (Pengaturan Umum, Hero, Program, Pelatih, Pemain, Jadwal, Berita, Galeri, Partner & Sponsor, dan FAQ) lengkap dengan fitur unggah foto kustom serta ekspor/impor JSON.
 
-## Run Locally
+## Menjalankan Secara Lokal
 
-**Prerequisites:**  Node.js
+**Prasyarat:** Node.js (v18+)
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. Instal dependensi:
+   ```bash
+   npm install
+   ```
+2. Jalankan server pengembangan:
+   ```bash
+   npm run dev
+   ```
+3. Untuk membuat hasil *production build*:
+   ```bash
+   npm run build
+   ```
