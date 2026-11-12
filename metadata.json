@@ -1,0 +1,6 @@
+{
+  "name": "Akademi Futsal Anambas (AFK) - Portal & CMS",
+  "description": "Portal digital terpadu, sistem pendaftaran siswa, kalkulator usia, dan CMS Local-First Akademi Futsal Anambas (AFK).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
